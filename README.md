@@ -1,0 +1,1 @@
+# Desafio-4.2-Equipamento
