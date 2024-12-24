@@ -1,8 +1,4 @@
 import { Sequelize } from "sequelize";
-import { Paciente } from "../models/Paciente.js";
-import { Consulta } from "../models/Consulta.js";
-
-import { ErrorCodes } from "../utils/Error.js";
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -39,21 +35,7 @@ class Database {
      * Inicializa os modelos e relacionamentos
      */
     init(){
-        
-        Paciente.init(this.#conexao);
-        Consulta.init(this.#conexao);
-
-        Paciente.hasMany(Consulta, {
-            foreignKey: "cpf_paciente", // Define que a chave estrangeira é cpf_paciente
-            sourceKey: "cpf",           // Indica que o campo no Paciente é cpf
-            as: "consultas",            // Alias para a relação
-        });
-        
-        Consulta.belongsTo(Paciente, {
-            foreignKey: "cpf_paciente", // Define a chave estrangeira
-            targetKey: "cpf",           // Indica que a referência no Paciente é cpf
-            as: "paciente",             // Alias para a relação
-        });
+        // Inicia modelos e seus relacionamentos
     }
 
     /**
@@ -75,16 +57,16 @@ class Database {
             // Futuramente retornar o tipo de erro em um objeto
             switch (error.original.code) {
                 case '28P01': // Login inválido
-                    return {sucess: false, error: ErrorCodes.ERR_BD_LOGIN_INVALIDO};
+                    return {sucess: false, error: "Login inválido"};
             
                 case 'EAI_AGAIN': // Host desconhecido
-                    return {sucess: false, error: ErrorCodes.ERR_BD_HOST_INVALIDO};
+                    return {sucess: false, error: "Host inválido"};
             
                 case '3D000': // Banco de dados não existe
-                    return {sucess: false, error: ErrorCodes.ERR_BD_INEXISTENTE};
+                    return {sucess: false, error: "Banco de dados não existe"};
             
                 default: // Outros erros
-                    return {sucess: false, error: ErrorCodes.ERR_BD_DESCONHECIDO};
+                    return {sucess: false, error: "Erro desconhecido"};
             }
         };
     }
