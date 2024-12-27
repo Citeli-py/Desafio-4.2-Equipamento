@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import { Bicicleta } from "../models/Bicicleta";
+import { Bicicleta } from "../models/Bicicleta.js";
 
 import dotenv from 'dotenv';
 dotenv.config();
