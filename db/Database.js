@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize";
+import { Bicicleta } from "../models/Bicicleta";
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -35,7 +36,7 @@ class Database {
      * Inicializa os modelos e relacionamentos
      */
     init(){
-        // Inicia modelos e seus relacionamentos
+        Bicicleta.init(this.#conexao);
     }
 
     /**
