@@ -23,7 +23,6 @@ export class Bicicleta extends Model {
         },
         numero: {
           type: DataTypes.STRING,
-          unique: true,
           allowNull: false,
         },
         status: {
@@ -36,6 +35,7 @@ export class Bicicleta extends Model {
         sequelize,
         modelName: 'Bicicleta',
         tableName: 'bicicletas',
+        timestamps: false,
       }
     );  
   }
