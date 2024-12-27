@@ -1,7 +1,7 @@
 // Importações necessárias
 import { Bicicleta } from '../models/Bicicleta.js';
 
-class BicicletaController {
+export class BicicletaController {
   // Método para criar uma nova bicicleta
   static async criarBicicleta(req, res) {
     try {
@@ -71,10 +71,36 @@ class BicicletaController {
 
       await bicicleta.destroy();
       return res.status(200).json({ message: 'Bicicleta deletada com sucesso' });
+
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  static async integrarNaRede(req, res){
+
+  }
+
+  static async retirarDaRede(req, res){
+
+  }
+
+  static async alterarStatus(req, res){
+    try{
+        const {id, acao} = req.params;
+
+        const bicicleta = await Bicicleta.findByPk(id);
+        if (!bicicleta) 
+            return res.status(404).json({ error: 'Bicicleta não encontrada' });
+
+        bicicleta.status = acao;
+        await bicicleta.save()
+        return res.status(200).json(bicicleta);
+
+    }catch (error){
+        return res.status(500).json({ error: error.message });
+    }
+  }
 }
 
-module.exports = BicicletaController;
+export default BicicletaController;
