@@ -18,17 +18,17 @@ export class Bicicleta extends Model {
           allowNull: false,
         },
         ano: {
-          type: DataTypes.INTEGER,
+          type: DataTypes.STRING,
           allowNull: false,
         },
         numero: {
-          type: DataTypes.STRING,
+          type: DataTypes.INTEGER,
           allowNull: false,
         },
         status: {
           type: DataTypes.STRING,
           allowNull: false,
-          defaultValue: 'disponível', // Exemplos: 'disponível', 'alugada', 'manutenção'
+          defaultValue: 'NOVA', // Exemplos: 'DISPONIVEL','EM_USO', 'NOVA', 'APOSENTADA', 'REPARO_SOLICITADO', 'EM_REPARO'
         },
       },
       {
@@ -38,5 +38,15 @@ export class Bicicleta extends Model {
         timestamps: false,
       }
     );  
+  }
+
+  // Não retira o a bicicleta do banco de dados mas ela não deve mais aparecer caso seja pesquisada
+  softDelete(){
+    this.status = "EXCLUIDA";
+  }
+
+  // Verifica se a bicicleta foi excluida
+  isExcluida(){
+    return this.status === "EXCLUIDA";
   }
 };
