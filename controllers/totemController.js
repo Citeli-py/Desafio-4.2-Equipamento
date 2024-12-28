@@ -4,9 +4,9 @@ export class TotemController {
   // criar novo totem
   static async criarTotem(req, res) {
     try {
-      const { localizacao, status } = req.body;
+      const { localizacao, descricao } = req.body;
 
-      const novoTotem = await Totem.create({ localizacao, status });
+      const novoTotem = await Totem.create({ localizacao, descricao });
 
       return res.status(201).json(novoTotem);
     } catch (error) {
