@@ -27,8 +27,33 @@ export class TotemController {
   // atualizar um totem existente pelo ID
   static async atualizarTotem(req, res) {
     try {
+      const { idTotem } = req.params;
+      const { localizacao, descricao } = req.body;
+  
+      // Usando função nativa do sequelize para buscar por ID
+      const totem = await Totem.findByPk(idTotem);
+      if (!totem) {
+        return res.status(404).json({ error: 'Não Encontrado' });
+      }
+  
+      if (!localizacao || !descricao) {
+        return res.status(422).json({ error: 'Dados inválidos' });
+      }
+  
+      // Atualizando os campos do totem
+      await totem.update({ localizacao, descricao });
+  
+      return res.status(200).json({ message: 'Dados Cadastrados', totem });
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+
+  // deletar um totem pelo ID
+  static async deletarTotem(req, res) {
+    try {
       const { idTotem } = req.params; 
-      const { localizacao, descricao } = req.body; 
 
       // Usando função nativa do sequelize para buscar por ID
       const totem = await Totem.findByPk(idTotem);
@@ -36,14 +61,15 @@ export class TotemController {
         return res.status(404).json({ error: 'Totem não encontrado' });
       }
 
-      // Atualizando os campos do totem
-      await totem.update({ localizacao, descricao });
+      // Excluindo totem
+      await totem.destroy();
+      return res.status(200).json({ message: 'Totem removido' });
 
-      return res.status(200).json(totem); 
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
+
 }
 
 export default TotemController;
