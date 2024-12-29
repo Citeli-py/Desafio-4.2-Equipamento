@@ -22,21 +22,19 @@ export class BicicletaController {
     }
 
     static #verificarCamposBicicleta(dados){
-        return this.#verificarCamposObrigatorios(dados, ["marca", "modelo", "ano"]);
+        return this.#verificarCamposObrigatorios(dados, ["marca", "modelo", "ano", "numero"]);
     }
 
     // Método para criar uma nova bicicleta
     static async criarBicicleta(req, res) {
         try {
-            const { marca, modelo, ano } = req.body;
+            const { marca, modelo, ano, numero } = req.body;
             
             // Verificar campos obrigatórios
             const erros = this.#verificarCamposBicicleta(req.body);
             if (erros.length > 0) 
                 return res.status(422).json(erros);
 
-            // Número deve ser gerado pelo sistema
-            const numero = parseInt(Math.random()*100); // Será substituido pela regra de negócio
             const novaBicicleta = await Bicicleta.create({ marca, modelo, ano, numero, status: "NOVA" });
 
             return res.status(200).json(novaBicicleta);
@@ -86,7 +84,7 @@ export class BicicletaController {
     static async atualizarBicicleta(req, res) {
         try {
             const { id } = req.params;
-            const { marca, modelo, ano } = req.body;
+            const { marca, modelo, ano, numero } = req.body;
 
             // Verificar campos obrigatórios
             const erros = this.#verificarCamposBicicleta(req.body);
@@ -105,6 +103,7 @@ export class BicicletaController {
         }
     }
 
+    // Apenas bicicletas com status “aposentada” e que não estiverem em nenhuma tranca podem ser excluídas. 
     // Método para deletar uma bicicleta pelo ID
     static async deletarBicicleta(req, res) {
         try {
@@ -112,6 +111,11 @@ export class BicicletaController {
 
             const bicicleta = await Bicicleta.findByPk(id);
             if (!bicicleta) 
+                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
+
+            // Verifica se existe uma tranca com a bicicleta que será deletada
+            const tranca = await Tranca.findOne({where:{bicicleta: bicicleta.id}});
+            if(!bicicleta.isAposentada() || tranca)
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
 
             bicicleta.softDelete();
