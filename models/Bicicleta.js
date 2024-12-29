@@ -49,4 +49,9 @@ export class Bicicleta extends Model {
   isExcluida(){
     return this.status === "EXCLUIDA";
   }
+
+  // Verifica se a bicicleta está aposentada
+  isAposentada(){
+    return this.status === "APOSENTADA";
+  }
 };
