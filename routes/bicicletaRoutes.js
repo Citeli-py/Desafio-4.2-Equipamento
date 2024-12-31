@@ -19,10 +19,10 @@ router.put('/:id', (req, res) => BicicletaController.atualizarBicicleta(req, res
 router.delete('/:id', (req, res) => BicicletaController.deletarBicicleta(req, res));
 
 // Colocar uma bicicleta na rede
-router.post('/integrarNaRede', (req, res) => BicicletaController.listarBicicletas(req, res));
+router.post('/integrarNaRede', (req, res) => BicicletaController.integrarNaRede(req, res));
 
 // Retirar uma bicicleta na rede
-router.post('/retirarDaRede', (req, res) => BicicletaController.listarBicicletas(req, res));
+router.post('/retirarDaRede', (req, res) => BicicletaController.retirarDaRede(req, res));
 
 // Altera o status de uma bicicleta
 router.post('/:id/status/:acao', (req, res) => BicicletaController.alterarStatus(req, res));
