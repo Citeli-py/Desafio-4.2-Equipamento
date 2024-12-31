@@ -1,6 +1,9 @@
 // Importações necessárias
 import { Op } from 'sequelize';
 import { Bicicleta } from '../models/Bicicleta.js';
+import { AluguelApi } from '../api/aluguel.js';
+import { Inclusao } from '../models/Inclusao.js';
+import { DateTime } from 'luxon';
 
 export class BicicletaController {
 
@@ -65,13 +68,23 @@ export class BicicletaController {
         }
     }
 
+    static async #getBicicleta(id){
+        return await Bicicleta.findByPk(id, {
+            where: {
+                status: {
+                    [Op.ne]: "EXCLUIDA"
+                }
+            }
+        });
+    }
+
     // Método para obter uma bicicleta específica pelo ID
     static async obterBicicleta(req, res) {
         try {
             const { id } = req.params;
 
-            const bicicleta = await Bicicleta.findByPk(id);
-            if (!bicicleta || bicicleta.isExcluida()) 
+            const bicicleta = await this.#getBicicleta(id);
+            if (!bicicleta) 
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
 
             return res.status(200).json(bicicleta);
@@ -91,8 +104,8 @@ export class BicicletaController {
             if (erros.length > 0) 
                 return res.status(422).json(erros);
 
-            const bicicleta = await Bicicleta.findByPk(id);
-            if (!bicicleta || bicicleta.isExcluida()) {
+            const bicicleta = await this.#getBicicleta(id);
+            if (!bicicleta) {
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
             }
 
@@ -109,7 +122,7 @@ export class BicicletaController {
         try {
             const { id } = req.params;
 
-            const bicicleta = await Bicicleta.findByPk(id);
+            const bicicleta = await this.#getBicicleta(id);
             if (!bicicleta) 
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
 
@@ -128,9 +141,58 @@ export class BicicletaController {
     }
 
     static async integrarNaRede(req, res){
+        /*
+        Regras:
+        - O número da bicicleta deve ter sido cadastrado previamente no sistema.
+        - A bicicleta deve estar com status de “NOVA” ou “EM_REPARO”.
+        - A tranca deve estar com o status “LIVRE”.
+        - Devem ser registrados: a data/hora da inserção na tranca, o número da bicicleta e o número da tranca.
+        */
 
+        try {
+            const { idTranca, idBicicleta, idFuncionario } = req.body;
+
+            //Verifica se esse funcionário existe
+            const funcionario = await AluguelApi.getFuncionario(idFuncionario);
+            if(!funcionario)
+                return res.status(422).json({codigo: '422', mensagem: "Funcionário não encontrado"})
+
+            // Verifica se existe a bicicleta
+            const bicicleta = await this.#getBicicleta(idBicicleta);
+            if (!bicicleta) 
+                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não encontrada' });
+
+            // Se bicicleta não estiver nem NOVA nem EM_REPARO
+            if (!['NOVA', 'EM_REPARO'].includes(bicicleta.status))
+                return res.status(422).json({codigo: "422", mensagem: 'Bicicleta com status inválido para a integração'})
+
+            // Esse código será substituido
+            //const Tranca = await Tranca.findByPk(idTranca);
+            const tranca = {id: idTranca, bicicleta: null, numero: 12, localizacao: "Rua 1", anoDeFabricacao: "2019", modelo: "Cadeado", status: "LIVRE"}
+
+            if (!tranca)
+                return res.status(422).json({codigo: '422', mensagem: "Tranca não encontrada"});
+
+            if(tranca.status !== 'LIVRE')
+                return res.status(422).json({codigo: '422', mensagem: "Tranca não está livre"});
+
+            await Inclusao.create({
+                idBicicleta: bicicleta.id, 
+                idFuncionario: funcionario.id, 
+                idTranca: tranca.id,
+                numeroBicicleta: bicicleta.numero,
+                numeroTranca: tranca.numero,
+                dataHora: DateTime.now().toSQL()
+            });
+
+            return res.status(200).json({});
+
+        } catch (error) {
+            return res.status(500).json({ codigo: '500', mensagem: error.message });
+        }
     }
 
+    // Um funcionário retira uma bicicleta da rede pela sua tranca, anotando data e hora
     static async retirarDaRede(req, res){
 
     }
