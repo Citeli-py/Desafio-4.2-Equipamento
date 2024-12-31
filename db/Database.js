@@ -1,5 +1,7 @@
 import { Sequelize } from "sequelize";
+
 import { Bicicleta } from "../models/Bicicleta.js";
+import { Inclusao } from "../models/Inclusao.js";
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -37,6 +39,7 @@ class Database {
      */
     init(){
         Bicicleta.init(this.#conexao);
+        Inclusao.init(this.#conexao);
     }
 
     /**
