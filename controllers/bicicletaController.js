@@ -204,8 +204,8 @@ export class BicicletaController {
             if (!this.#acoes.includes(acao))
                 return res.status(422).json({codigo: "422", mensagem: 'Ação inválida' })
 
-            const bicicleta = await Bicicleta.findByPk(id);
-            if (!bicicleta || bicicleta.isExcluida()) 
+            const bicicleta = await this.#getBicicleta(id)
+            if (!bicicleta) 
                 return res.status(404).json({codigo: "404", mensagem: 'Bicicleta não encontrada' });
 
             bicicleta.status = acao;
