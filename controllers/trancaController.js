@@ -1,4 +1,3 @@
-// Importações necessárias
 import { Tranca } from '../models/Tranca.js';
 import { Bicicleta } from '../models/Bicicleta.js'; 
 
@@ -179,3 +178,5 @@ export class TrancaController {
 }
 
 export default TrancaController;
+
+
