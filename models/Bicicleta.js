@@ -40,6 +40,10 @@ export class Bicicleta extends Model {
     );  
   }
 
+  static associate(models) {
+    this.hasOne(models.Tranca, {foreignKey: "bicicleta", sourceKey: 'bicicleta', as: 'tranca'});
+  }
+
   // Não retira o a bicicleta do banco de dados mas ela não deve mais aparecer caso seja pesquisada
   softDelete(){
     this.status = "EXCLUIDA";
