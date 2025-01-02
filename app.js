@@ -1,6 +1,5 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import bicicletaRoutes from './routes/bicicletaRoutes.js';
 import {DateTime} from 'luxon';
 
 const app = express();
@@ -16,8 +15,12 @@ app.use(function (req, res, next) {
   next();
 });
 
+import bicicletaRoutes from './routes/bicicletaRoutes.js';
+import trancaRoutes from './routes/trancaRoutes.js';
+
 // Rotas
 app.use('/bicicleta', bicicletaRoutes);
+app.use('/tranca', trancaRoutes);
 
 import Database from './db/Database.js';
 
