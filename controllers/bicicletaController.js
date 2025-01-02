@@ -184,7 +184,7 @@ export class BicicletaController {
                 dataHora: DateTime.now().toSQL()
             });
 
-            await TrancaController.trancarTranca(tranca.id);
+            await tranca.trancar(bicicleta.id);
             bicicleta.status = "DISPONIVEL";
             await bicicleta.save();
 
