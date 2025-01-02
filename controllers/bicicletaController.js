@@ -184,10 +184,7 @@ export class BicicletaController {
                 dataHora: DateTime.now().toSQL()
             });
 
-            await tranca.trancar(bicicleta.id);
-            bicicleta.status = "DISPONIVEL";
-            await bicicleta.save();
-
+            await tranca.trancar(bicicleta);
             return res.status(200).json({});
 
         } catch (error) {
@@ -197,6 +194,8 @@ export class BicicletaController {
 
     // Um funcionário retira uma bicicleta da rede pela sua tranca, anotando data e hora
     /*
+    Esse metodo deve abrir a tranca da bicicleta, fazer as alterações necessárias baseadas no statusAcaoReparador e anotar os dados da retirada
+
     Regras:
     - O número da bicicleta deve ter sido cadastrado previamente no sistema
     - A bicicleta deve estar presa em uma tranca e com status “EM_REPARO”.
@@ -214,12 +213,18 @@ export class BicicletaController {
             if(!tranca)
                 return res.status(422).json({codigo: '422', mensagem: 'Tranca não encontrada' });
 
+            if(statusAcaoReparador === "REPARO")
+                bicicleta.status = "EM_REPARO";
+
+            if(statusAcaoReparador === "APOSENTADORIA")
+                bicicleta.status = "APOSENTADA";
+
+            await bicicleta.save();
 
             await Retirada.create({
                 idTranca: idTranca,
                 idBicicleta: idBicicleta,
                 idFuncionario: idFuncionario,
-                statusAcaoReparador: statusAcaoReparador,
                 dataHora: DateTime.now().toSQL()
             });
 
