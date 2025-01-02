@@ -9,6 +9,21 @@ export class Retirada extends Model {
           autoIncrement: true,
           primaryKey: true,
         },
+
+        numeroBicicleta: {
+          type: DataTypes.INTEGER,
+          allowNull: false
+        },
+
+        matriculaFuncionario: {
+          type: DataTypes.INTEGER,
+          allowNull: false
+        },
+
+        dataHora: {
+          type: DataTypes.DATE,
+          allowNull: false
+        }
         
       },
       {
