@@ -10,21 +10,6 @@ export class Inclusao extends Model {
           primaryKey: true,
         },
 
-        idTranca: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-
-        idBicicleta: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-
-        idFuncionario: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-
         numeroBicicleta: {
           type: DataTypes.INTEGER,
           allowNull: false
