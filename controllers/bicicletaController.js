@@ -4,6 +4,8 @@ import { Bicicleta } from '../models/Bicicleta.js';
 import { AluguelApi } from '../api/aluguel.js';
 import { Inclusao } from '../models/Inclusao.js';
 import { DateTime } from 'luxon';
+import { Retirada } from '../models/Retirada.js';
+import { Tranca } from '../models/Tranca.js';
 
 export class BicicletaController {
 
@@ -126,10 +128,13 @@ export class BicicletaController {
             if (!bicicleta) 
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
 
+            if(!bicicleta.isAposentada())
+                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não está aposentada' });
+
             // Verifica se existe uma tranca com a bicicleta que será deletada
             const tranca = await Tranca.findOne({where:{bicicleta: bicicleta.id}});
-            if(!bicicleta.isAposentada() || tranca)
-                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
+            if(tranca)
+                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta está trancada' });
 
             bicicleta.softDelete();
             await bicicleta.save()
@@ -166,10 +171,7 @@ export class BicicletaController {
             if (!['NOVA', 'EM_REPARO'].includes(bicicleta.status))
                 return res.status(422).json({codigo: "422", mensagem: 'Bicicleta com status inválido para a integração'})
 
-            // Esse código será substituido
-            //const Tranca = await Tranca.findByPk(idTranca);
-            const tranca = {id: idTranca, bicicleta: null, numero: 12, localizacao: "Rua 1", anoDeFabricacao: "2019", modelo: "Cadeado", status: "LIVRE"}
-
+            const tranca = await Tranca.findByPk(idTranca);
             if (!tranca)
                 return res.status(422).json({codigo: '422', mensagem: "Tranca não encontrada"});
 
@@ -177,13 +179,14 @@ export class BicicletaController {
                 return res.status(422).json({codigo: '422', mensagem: "Tranca não está livre"});
 
             await Inclusao.create({
-                idBicicleta: bicicleta.id, 
-                idFuncionario: funcionario.id, 
-                idTranca: tranca.id,
                 numeroBicicleta: bicicleta.numero,
                 numeroTranca: tranca.numero,
                 dataHora: DateTime.now().toSQL()
             });
+
+            await TrancaController.trancarTranca(tranca.id);
+            bicicleta.status = "DISPONIVEL";
+            await bicicleta.save();
 
             return res.status(200).json({});
 
@@ -193,8 +196,38 @@ export class BicicletaController {
     }
 
     // Um funcionário retira uma bicicleta da rede pela sua tranca, anotando data e hora
+    /*
+    Regras:
+    - O número da bicicleta deve ter sido cadastrado previamente no sistema
+    - A bicicleta deve estar presa em uma tranca e com status “EM_REPARO”.
+    - Devem ser registrados: a data/hora da retirada da tranca, a matrícula do reparador e o número da bicicleta.
+    */
     static async retirarDaRede(req, res){
+        try{
+            const {idTranca, idBicicleta, idFuncionario, statusAcaoReparador} = req.body;
 
+            const bicicleta = await this.#getBicicleta(idBicicleta);
+            if (!bicicleta) 
+                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não encontrada' });
+
+            const tranca = await Tranca.findOne({ where: { bicicleta: bicicleta.id } });
+            if(!tranca)
+                return res.status(422).json({codigo: '422', mensagem: 'Tranca não encontrada' });
+
+
+            await Retirada.create({
+                idTranca: idTranca,
+                idBicicleta: idBicicleta,
+                idFuncionario: idFuncionario,
+                statusAcaoReparador: statusAcaoReparador,
+                dataHora: DateTime.now().toSQL()
+            });
+
+            return res.status(200).json({});
+
+        } catch (error){
+            return res.status(500).json({ codigo: '500', mensagem: error.message });
+        }
     }
 
     static async alterarStatus(req, res){
