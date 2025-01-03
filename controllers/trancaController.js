@@ -22,12 +22,12 @@ export class TrancaController {
         localizacao, 
         anoDeFabricacao, 
         modelo, 
-        status: "NOVA"
+        status 
       });
 
       return res.status(201).json(novaTranca);
     } catch (error) {
-      return res.status(422).json({ error: error.message });
+      return res.status(422).json({ error: 'Dados inválidos' });
     }
   }
 
@@ -58,8 +58,8 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      await tranca.update({ localizacao, anoDeFabricacao, modelo });
-      return res.status(200).json( tranca );
+      await tranca.update({ numero, localizacao, anoDeFabricacao, modelo, status });
+      return res.status(200).json({ message: 'Dados atualizados com sucesso', tranca });
     } catch (error) {
       return res.status(422).json({ error: 'Dados inválidos' });
     }
@@ -102,27 +102,27 @@ export class TrancaController {
   static async trancarTranca(req, res) {
     try {
       const { idTranca } = req.params;
-      const { bicicleta } = req.body;
+      const { bicicletaId } = req.body;
 
       const tranca = await Tranca.findByPk(idTranca);
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      // Caso não exista bicicleta na requisição
-      if(!bicicleta){
-        await tranca.trancar();
-        return res.status(200).json(tranca);
+      tranca.status = 'trancada';
+      if (bicicletaId) {
+        const bicicleta = await Bicicleta.findByPk(bicicletaId);
+        if (!bicicleta) {
+          return res.status(404).json({ error: 'Bicicleta não encontrada' });
+        }
+
+        tranca.bicicletaId = bicicletaId; // Associação
+        bicicleta.status = 'trancada';
+        await bicicleta.save();
       }
 
-      const bicicleta_model = await Bicicleta.findByPk(bicicleta);
-      if (!bicicleta_model) {
-        return res.status(404).json({ error: 'Bicicleta não encontrada' });
-      }
-
-      await tranca.trancar(bicicleta_model);
+      await tranca.save();
       return res.status(200).json(tranca);
-
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -178,3 +178,5 @@ export class TrancaController {
 }
 
 export default TrancaController;
+
+

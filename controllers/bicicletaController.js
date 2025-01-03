@@ -184,10 +184,7 @@ export class BicicletaController {
                 dataHora: DateTime.now().toSQL()
             });
 
-            await tranca.trancar(bicicleta.id);
-            bicicleta.status = "DISPONIVEL";
-            await bicicleta.save();
-
+            await tranca.trancar(bicicleta);
             return res.status(200).json({});
 
         } catch (error) {
@@ -197,9 +194,11 @@ export class BicicletaController {
 
     // Um funcionário retira uma bicicleta da rede pela sua tranca, anotando data e hora
     /*
+    Esse metodo deve abrir a tranca da bicicleta, fazer as alterações necessárias baseadas no statusAcaoReparador e anotar os dados da retirada
+
     Regras:
     - O número da bicicleta deve ter sido cadastrado previamente no sistema
-    - A bicicleta deve estar presa em uma tranca e com status “EM_REPARO”.
+    - A bicicleta deve estar presa em uma tranca e com status 'REPARO_SOLICITADO'.
     - Devem ser registrados: a data/hora da retirada da tranca, a matrícula do reparador e o número da bicicleta.
     */
     static async retirarDaRede(req, res){
@@ -210,19 +209,39 @@ export class BicicletaController {
             if (!bicicleta) 
                 return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não encontrada' });
 
-            const tranca = await Tranca.findOne({ where: { bicicleta: bicicleta.id } });
+            if(bicicleta.status !== "REPARO_SOLICITADO")
+                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não teve o reparo solicitado' });
+
+            const tranca = await Tranca.findByPk(idTranca);
             if(!tranca)
                 return res.status(422).json({codigo: '422', mensagem: 'Tranca não encontrada' });
 
+            if(tranca.bicicleta !== bicicleta.id)
+                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não está presa na tranca informada' });
 
+            const funcionario = await AluguelApi.getFuncionario(idFuncionario);
+            if(!funcionario)
+                return res.status(422).json({codigo: '422', mensagem: 'Funcionário não encontrado' });
+
+            if(statusAcaoReparador === "REPARO")
+                bicicleta.status = "EM_REPARO";
+
+            if(statusAcaoReparador === "APOSENTADORIA")
+                bicicleta.status = "APOSENTADA";
+
+            if(!["REPARO", "APOSENTADORIA"].includes(statusAcaoReparador))
+                return res.status(422).json({codigo: '422', mensagem: 'Ação do reparador inválida' });
+
+            
             await Retirada.create({
-                idTranca: idTranca,
-                idBicicleta: idBicicleta,
-                idFuncionario: idFuncionario,
-                statusAcaoReparador: statusAcaoReparador,
+                numeroBicicleta: bicicleta.numero,
+                matriculaFuncionario: funcionario.matricula,
                 dataHora: DateTime.now().toSQL()
             });
 
+            await bicicleta.save();
+            await tranca.destrancar();
+            
             return res.status(200).json({});
 
         } catch (error){
