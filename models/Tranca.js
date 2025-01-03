@@ -65,6 +65,15 @@ export class Tranca extends Model {
     this.status = "OCUPADA";
     await this.save();
   }
+
+  /**
+   * Metodo para destrancar a tranca, retirando a associação com uma bicicleta e alterando seu status para LIVRE
+   */
+  async destrancar(){
+    this.bicicleta = null;
+    this.status = "LIVRE";
+    await this.save()
+  }
   
   static associate(models) {
     this.belongsTo(models.Bicicleta, { foreignKey: 'bicicleta', as: 'bicicleta' });
