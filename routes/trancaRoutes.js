@@ -34,6 +34,6 @@ router.post('/integrarNaRede', (req, res) => TrancaController.integrarNaRede(req
 router.post('/retirarDaRede', (req, res) => TrancaController.retirarDaRede(req, res));
 
 // Altera o status de uma tranca
-router.post('/:idTranca/status/:acao', (req, res) => TrancaController.alterarStatus(req, res));
+router.post('/:idTranca/status/:acao', (req, res) => TrancaController.alterarStatusTranca(req, res));
 
 export default router;
