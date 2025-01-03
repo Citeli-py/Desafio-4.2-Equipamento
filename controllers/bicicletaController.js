@@ -1,5 +1,4 @@
 // Importações necessárias
-import { Op } from 'sequelize';
 import { Bicicleta } from '../models/Bicicleta.js';
 import { AluguelApi } from '../api/aluguel.js';
 import { Inclusao } from '../models/Inclusao.js';
@@ -39,7 +38,8 @@ export class BicicletaController {
             const erros = this.#verificarCamposBicicleta(req.body);
             if (erros.length > 0) 
                 return res.status(422).json(erros);
-
+            
+            // Corrigir criação de bicicleta
             const novaBicicleta = await Bicicleta.create({ marca, modelo, ano, numero, status: "NOVA" });
 
             return res.status(200).json(novaBicicleta);
@@ -50,34 +50,14 @@ export class BicicletaController {
         }
     }
 
-    static async #getAllBicicletas(){
-        return await Bicicleta.findAll({
-            where: {
-                status: {
-                    [Op.ne]: "EXCLUIDA"
-                }
-            }
-        });
-    }
-
     // Método para listar todas as bicicletas
     static async listarBicicletas(req, res) {
         try {
-            const bicicletas = await this.#getAllBicicletas();
+            const bicicletas = await Bicicleta.getAllBicicletas();
             return res.status(200).json(bicicletas);
         } catch (error) {
             return res.status(500).json({ codigo: '500', mensagem: error.message });
         }
-    }
-
-    static async #getBicicleta(id){
-        return await Bicicleta.findByPk(id, {
-            where: {
-                status: {
-                    [Op.ne]: "EXCLUIDA"
-                }
-            }
-        });
     }
 
     // Método para obter uma bicicleta específica pelo ID
@@ -85,7 +65,7 @@ export class BicicletaController {
         try {
             const { id } = req.params;
 
-            const bicicleta = await this.#getBicicleta(id);
+            const bicicleta = await Bicicleta.getBicicleta(id);
             if (!bicicleta) 
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
 
@@ -106,7 +86,7 @@ export class BicicletaController {
             if (erros.length > 0) 
                 return res.status(422).json(erros);
 
-            const bicicleta = await this.#getBicicleta(id);
+            const bicicleta = await Bicicleta.getBicicleta(id);
             if (!bicicleta) {
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
             }
@@ -124,7 +104,7 @@ export class BicicletaController {
         try {
             const { id } = req.params;
 
-            const bicicleta = await this.#getBicicleta(id);
+            const bicicleta = await Bicicleta.getBicicleta(id);
             if (!bicicleta) 
                 return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
 
@@ -163,7 +143,7 @@ export class BicicletaController {
                 return res.status(422).json({codigo: '422', mensagem: "Funcionário não encontrado"})
 
             // Verifica se existe a bicicleta
-            const bicicleta = await this.#getBicicleta(idBicicleta);
+            const bicicleta = await Bicicleta.getBicicleta(idBicicleta);
             if (!bicicleta) 
                 return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não encontrada' });
 
@@ -205,7 +185,8 @@ export class BicicletaController {
         try{
             const {idTranca, idBicicleta, idFuncionario, statusAcaoReparador} = req.body;
 
-            const bicicleta = await this.#getBicicleta(idBicicleta);
+            //encapsular respostas
+            const bicicleta = await Bicicleta.getBicicleta(idBicicleta);
             if (!bicicleta) 
                 return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não encontrada' });
 
@@ -256,12 +237,12 @@ export class BicicletaController {
             if (!this.#acoes.includes(acao))
                 return res.status(422).json({codigo: "422", mensagem: 'Ação inválida' })
 
-            const bicicleta = await this.#getBicicleta(id)
+            const bicicleta = await Bicicleta.getBicicleta(id)
             if (!bicicleta) 
                 return res.status(404).json({codigo: "404", mensagem: 'Bicicleta não encontrada' });
 
             bicicleta.status = acao;
-            await bicicleta.save()
+            await bicicleta.save();
             return res.status(200).json(bicicleta);
 
         }catch (error){
