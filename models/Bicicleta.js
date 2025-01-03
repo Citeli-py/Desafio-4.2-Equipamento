@@ -1,4 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
+import { Op } from 'sequelize';
 
 export class Bicicleta extends Model {
 
@@ -42,6 +43,31 @@ export class Bicicleta extends Model {
 
   static associate(models) {
     this.hasOne(models.Tranca, {foreignKey: "bicicleta", sourceKey: 'bicicleta', as: 'tranca'});
+  }
+
+  /**
+   * Metodo que pega todas as bicicletas e lida com softdelete
+   * 
+   * @async
+   * @returns {Promise<Bicicleta[]>} - Todas as bicicletas disponiveis
+   */
+  static async getAllBicicletas(){
+    return await this.findAll({where: {status: {[Op.ne]: "EXCLUIDA"}}});
+  }
+
+  /**
+   * @async
+   * @param {number} id - id da bicicleta
+   * @returns {Promise<Bicicleta>} - Bicicleta com o id informado
+   */
+  static async getBicicleta(id){
+    return await this.findByPk(id, {
+      where: {
+          status: {
+              [Op.ne]: "EXCLUIDA"
+          }
+      }
+    });
   }
 
   // Não retira o a bicicleta do banco de dados mas ela não deve mais aparecer caso seja pesquisada
