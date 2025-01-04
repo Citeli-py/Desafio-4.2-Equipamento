@@ -44,7 +44,7 @@ export class InclusaoBicicleta extends Model {
    * @param {Tranca} tranca 
    */
   static async criarInclusao(bicicleta, tranca){
-    await Inclusao.create({
+    await InclusaoBicicleta.create({
         numeroBicicleta: bicicleta.numero,
         numeroTranca: tranca.numero,
         dataHora: DateTime.now().toSQL()

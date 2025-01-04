@@ -1,4 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
+import { Bicicleta } from './Bicicleta';
 
 export class RetiradaBicicleta extends Model {
 
@@ -36,8 +37,14 @@ export class RetiradaBicicleta extends Model {
   }
 
 
+  /**
+   * Cria uma retirada de bicicleta
+   * 
+   * @param {Bicicleta} bicicleta 
+   * @param {Object} funcionario 
+   */
   static async criarRetirada(bicicleta, funcionario){
-    await Retirada.create({
+    await RetiradaBicicleta.create({
         numeroBicicleta: bicicleta.numero,
         matriculaFuncionario: funcionario.matricula,
         dataHora: DateTime.now().toSQL()
