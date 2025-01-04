@@ -74,7 +74,7 @@ export class TrancaController {
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
-      tranca.status = 'excluída';
+      tranca.status = 'EXCLUÍDA';
       await tranca.save();
   
       return res.status(200).json({ message: 'Tranca removida com sucesso', tranca });
