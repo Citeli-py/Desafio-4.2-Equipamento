@@ -69,14 +69,15 @@ export class TrancaController {
   static async deletarTranca(req, res) {
     try {
       const { idTranca } = req.params;
-
+  
       const tranca = await Tranca.findByPk(idTranca);
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
-
-      await tranca.destroy();
-      return res.status(200).json({ message: 'Tranca removida com sucesso' });
+      tranca.status = 'excluída';
+      await tranca.save();
+  
+      return res.status(200).json({ message: 'Tranca removida com sucesso', tranca });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
