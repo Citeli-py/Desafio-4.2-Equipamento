@@ -1,14 +1,14 @@
 // Importações necessárias
 import { Bicicleta } from '../models/Bicicleta.js';
 import { AluguelApi } from '../api/aluguel.js';
-import { Inclusao } from '../models/Inclusao.js';
+import { Inclusao } from '../models/InclusaoBicicleta.js';
 import { DateTime } from 'luxon';
-import { Retirada } from '../models/Retirada.js';
+import { Retirada } from '../models/RetiradaBicicleta.js';
 import { Tranca } from '../models/Tranca.js';
 
-export class BicicletaController {
+import { ErroDadoInvalido, ErroInterno, ErroNaoEncontrado, Sucesso } from '../util/responseHandler.js';
 
-    static #acoes = ['DISPONIVEL','EM_USO', 'NOVA', 'APOSENTADA', 'REPARO_SOLICITADO', 'EM_REPARO']
+export class BicicletaController {
 
     static #verificarCamposObrigatorios(dados, camposObrigatorios) {
         const erros = [];
@@ -34,19 +34,15 @@ export class BicicletaController {
         try {
             const { marca, modelo, ano, numero } = req.body;
             
-            // Verificar campos obrigatórios
-            const erros = this.#verificarCamposBicicleta(req.body);
-            if (erros.length > 0) 
-                return res.status(422).json(erros);
-            
             // Corrigir criação de bicicleta
-            const novaBicicleta = await Bicicleta.create({ marca, modelo, ano, numero, status: "NOVA" });
+            const novaBicicleta = await Bicicleta.criarBicicleta(marca, modelo, ano, numero)
+            if (!novaBicicleta.sucesso)
+                return ErroDadoInvalido.toResponse(res, "404", "Dados inválidos ao tentar criar bicicleta");
 
-            return res.status(200).json(novaBicicleta);
+            return Sucesso.toResponse(res, novaBicicleta.bicicleta);
         } catch (error) {
-            // Falha no sistema, gerar log
-            console.log(error)
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+
+            return ErroInterno.toResponse(res, "500", error, "Criar Bicicleta")
         }
     }
 
@@ -54,9 +50,10 @@ export class BicicletaController {
     static async listarBicicletas(req, res) {
         try {
             const bicicletas = await Bicicleta.getAllBicicletas();
-            return res.status(200).json(bicicletas);
+            return Sucesso.toResponse(res, bicicletas);
         } catch (error) {
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+
+            return ErroInterno.toResponse(res, "500", error, "Listar Bicicleta");
         }
     }
 
@@ -67,11 +64,11 @@ export class BicicletaController {
 
             const bicicleta = await Bicicleta.getBicicleta(id);
             if (!bicicleta) 
-                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
+                return ErroNaoEncontrado.toResponse(res, "404", 'Bicicleta não encontrada')
 
-            return res.status(200).json(bicicleta);
+            return Sucesso.toResponse(res, bicicleta);
         } catch (error) {
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+            return ErroInterno.toResponse(res, "500", error, "Obter Bicicleta");
         }
     }
 
@@ -81,20 +78,18 @@ export class BicicletaController {
             const { id } = req.params;
             const { marca, modelo, ano, numero } = req.body;
 
-            // Verificar campos obrigatórios
-            const erros = this.#verificarCamposBicicleta(req.body);
-            if (erros.length > 0) 
-                return res.status(422).json(erros);
-
             const bicicleta = await Bicicleta.getBicicleta(id);
-            if (!bicicleta) {
-                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
-            }
+            if (!bicicleta) 
+                return ErroNaoEncontrado.toResponse(res, "404", "Bicicleta não encontrada");
 
-            await bicicleta.update({ marca, modelo, ano });
-            return res.status(200).json(bicicleta);
+            const resultado = await bicicleta.atualizaBicicleta(marca, modelo, ano);
+            if(!resultado.sucesso)
+                return ErroDadoInvalido.toResponse(res, "404", "Dados inválidos ao tentar atualizar bicicleta");
+
+            return Sucesso.toResponse(res, bicicleta);
         } catch (error) {
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+
+            return ErroInterno.toResponse(res, "500", error, "atualizar Bicicleta");
         }
     }
 
@@ -106,22 +101,21 @@ export class BicicletaController {
 
             const bicicleta = await Bicicleta.getBicicleta(id);
             if (!bicicleta) 
-                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não encontrada' });
+                return ErroNaoEncontrado.toResponse(res, "404", "Bicicleta não encontrada");
 
             if(!bicicleta.isAposentada())
-                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta não está aposentada' });
+                return ErroNaoEncontrado.toResponse(res, "404", 'Bicicleta não está aposentada');
 
             // Verifica se existe uma tranca com a bicicleta que será deletada
             const tranca = await Tranca.findOne({where:{bicicleta: bicicleta.id}});
             if(tranca)
-                return res.status(404).json({codigo: '404', mensagem: 'Bicicleta está trancada' });
+                return ErroNaoEncontrado.toResponse(res, "404", 'Bicicleta está trancada');
 
-            bicicleta.softDelete();
-            await bicicleta.save()
-            return res.status(200).json();
+            await bicicleta.softDelete();
+            return Sucesso.toResponse(res,{});
 
         } catch (error) {
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+            return ErroInterno.toResponse(res, "500", error, "deletar Bicicleta");
         }
     }
 
@@ -140,35 +134,30 @@ export class BicicletaController {
             //Verifica se esse funcionário existe
             const funcionario = await AluguelApi.getFuncionario(idFuncionario);
             if(!funcionario)
-                return res.status(422).json({codigo: '422', mensagem: "Funcionário não encontrado"})
+                return ErroDadoInvalido.toResponse(res, '422', "Funcionário não encontrado");
 
             // Verifica se existe a bicicleta
             const bicicleta = await Bicicleta.getBicicleta(idBicicleta);
             if (!bicicleta) 
-                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não encontrada' });
+                return ErroDadoInvalido.toResponse(res, '422', 'Bicicleta não encontrada' );
 
             // Se bicicleta não estiver nem NOVA nem EM_REPARO
             if (!['NOVA', 'EM_REPARO'].includes(bicicleta.status))
-                return res.status(422).json({codigo: "422", mensagem: 'Bicicleta com status inválido para a integração'})
+                return ErroDadoInvalido.toResponse(res, '422', 'Bicicleta com status inválido para a integração');
 
             const tranca = await Tranca.findByPk(idTranca);
             if (!tranca)
-                return res.status(422).json({codigo: '422', mensagem: "Tranca não encontrada"});
+                return ErroDadoInvalido.toResponse(res, '422', "Tranca não encontrada");
 
             if(tranca.status !== 'LIVRE')
-                return res.status(422).json({codigo: '422', mensagem: "Tranca não está livre"});
+                return ErroDadoInvalido.toResponse(res, '422', "Tranca não está livre");
 
-            await Inclusao.create({
-                numeroBicicleta: bicicleta.numero,
-                numeroTranca: tranca.numero,
-                dataHora: DateTime.now().toSQL()
-            });
-
+            await Inclusao.criarInclusao(bicicleta, tranca);
             await tranca.trancar(bicicleta);
-            return res.status(200).json({});
+            return Sucesso.toResponse(res, {});
 
         } catch (error) {
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+            return ErroInterno.toResponse(res, "500", error, "integrar Bicicleta na rede");
         }
     }
 
@@ -188,45 +177,35 @@ export class BicicletaController {
             //encapsular respostas
             const bicicleta = await Bicicleta.getBicicleta(idBicicleta);
             if (!bicicleta) 
-                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não encontrada' });
+                return ErroDadoInvalido.toResponse(res, '422', 'Bicicleta não encontrada' );
 
-            if(bicicleta.status !== "REPARO_SOLICITADO")
-                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não teve o reparo solicitado' });
+            if(bicicleta.isReparoSolicitado())
+                return ErroDadoInvalido.toResponse(res, '422', 'Bicicleta não teve o reparo solicitado' );
 
             const tranca = await Tranca.findByPk(idTranca);
             if(!tranca)
-                return res.status(422).json({codigo: '422', mensagem: 'Tranca não encontrada' });
+                return ErroDadoInvalido.toResponse(res, '422', 'Tranca não encontrada');
 
-            if(tranca.bicicleta !== bicicleta.id)
-                return res.status(422).json({codigo: '422', mensagem: 'Bicicleta não está presa na tranca informada' });
+            if(tranca.isBicicletaNaTranca(bicicleta))
+                return ErroDadoInvalido.toResponse(res, '422', 'Bicicleta não está presa na tranca informada' );
 
             const funcionario = await AluguelApi.getFuncionario(idFuncionario);
             if(!funcionario)
-                return res.status(422).json({codigo: '422', mensagem: 'Funcionário não encontrado' });
-
-            if(statusAcaoReparador === "REPARO")
-                bicicleta.status = "EM_REPARO";
-
-            if(statusAcaoReparador === "APOSENTADORIA")
-                bicicleta.status = "APOSENTADA";
+                return ErroDadoInvalido.toResponse(res, '422', 'Funcionário não encontrado' );
 
             if(!["REPARO", "APOSENTADORIA"].includes(statusAcaoReparador))
-                return res.status(422).json({codigo: '422', mensagem: 'Ação do reparador inválida' });
+                return ErroDadoInvalido.toResponse(res, '422', 'Ação do reparador inválida' );
 
+            bicicleta.acaoReparador(statusAcaoReparador);
             
-            await Retirada.create({
-                numeroBicicleta: bicicleta.numero,
-                matriculaFuncionario: funcionario.matricula,
-                dataHora: DateTime.now().toSQL()
-            });
-
+            await Retirada.criarRetirada(bicicleta, funcionario);
             await bicicleta.save();
             await tranca.destrancar();
             
-            return res.status(200).json({});
+            return Sucesso.toResponse(res, {})
 
         } catch (error){
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+            return ErroInterno.toResponse(res, "500", error, "Retirar bicicleta da Rede");
         }
     }
 
@@ -234,20 +213,17 @@ export class BicicletaController {
         try{
             const {id, acao} = req.params;
 
-            if (!this.#acoes.includes(acao))
-                return res.status(422).json({codigo: "422", mensagem: 'Ação inválida' })
-
             const bicicleta = await Bicicleta.getBicicleta(id)
             if (!bicicleta) 
-                return res.status(404).json({codigo: "404", mensagem: 'Bicicleta não encontrada' });
+                return ErroNaoEncontrado.toResponse(res, "404", "Bicicleta não encontrada");
 
-            bicicleta.status = acao;
-            await bicicleta.save();
-            return res.status(200).json(bicicleta);
+            if ( !await bicicleta.alterarStatus(acao) )
+                return ErroDadoInvalido.toResponse(res, "422", 'Status inválido');
+           
+            return Sucesso.toResponse(res, bicicleta);
 
         }catch (error){
-            // Aqui é uma falha no sistema, deve ser anotado no arquivo de log
-            return res.status(500).json({ codigo: '500', mensagem: error.message });
+            return ErroInterno.toResponse(res, "500", error, "alterar status da bicicleta");
         }
     }
 }
