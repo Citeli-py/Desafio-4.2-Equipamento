@@ -61,7 +61,7 @@ export class TotemController {
         return res.status(404).json({ error: 'Totem não encontrado' });
       }
 
-      // Excluindo totem
+      // Excluindo totem com hard delete
       await totem.destroy();
       return res.status(200).json({ message: 'Totem removido' });
 
@@ -69,6 +69,9 @@ export class TotemController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+
+  //Faltam os endpoints que associam totens com trancas
 
 }
 
