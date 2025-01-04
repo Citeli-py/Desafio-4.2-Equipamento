@@ -15,15 +15,17 @@ export class TrancaController {
   // Cadastrar uma nova tranca
   static async criarTranca(req, res) {
     try {
-      const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
+      const { numero, localizacao, anoDeFabricacao, modelo } = req.body;
 
       const novaTranca = await Tranca.create({ 
         numero, 
         localizacao, 
         anoDeFabricacao, 
-        modelo, 
-        status 
+        modelo
       });
+
+      novaTranca.status = "NOVA";
+      //atendendo requisito R1 de UC13, todas as trancas geradas possuem status "nova"
 
       return res.status(201).json(novaTranca);
     } catch (error) {
@@ -65,7 +67,7 @@ export class TrancaController {
     }
   }
 
-  // Remover uma tranca
+  // Remover uma tranca (Falta realizar a verificação de bibicletas associadas antes de deletar)
   static async deletarTranca(req, res) {
     try {
       const { idTranca } = req.params;
@@ -74,6 +76,8 @@ export class TrancaController {
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
+
+      //apenas trancas sem bicicletas associadas devem ser deletadas
       tranca.status = 'EXCLUÍDA';
       await tranca.save();
   
