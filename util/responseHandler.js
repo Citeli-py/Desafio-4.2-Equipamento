@@ -76,4 +76,4 @@ class Sucesso{
 
 }
 
-module.exports = {ErroDadoInvalido, ErroInterno, ErroNaoEncontrado, Sucesso};
+export {ErroDadoInvalido, ErroInterno, ErroNaoEncontrado, Sucesso};
