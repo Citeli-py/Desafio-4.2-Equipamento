@@ -70,6 +70,9 @@ class ErroNaoEncontrado{
 
 class Sucesso{
 
+    static toResponse(res, data){
+        return ResponseHandler.success(res, data);
+    }
 
 }
 
