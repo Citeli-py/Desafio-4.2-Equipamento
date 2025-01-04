@@ -74,6 +74,18 @@ export class Tranca extends Model {
     this.status = "LIVRE";
     await this.save()
   }
+
+  /**
+   * 
+   * @param {Bicicleta} bicicleta - Bicicleta que pode estar na tranca
+   * @returns {boolean} - Se existir uma bicicleta na tranca retorna true
+   */
+  isBicicletaNaTranca(bicicleta=null){
+    if(bicicleta)
+      return this.bicicleta === bicicleta.id;
+
+    return this.bicicleta !== null;
+  }
   
   static associate(models) {
     this.belongsTo(models.Bicicleta, { foreignKey: 'bicicleta', as: 'bicicleta' });
