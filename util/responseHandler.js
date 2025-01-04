@@ -20,7 +20,7 @@ class ResponseHandler {
 
 class ErroDadoInvalido{
     static toResponse(res, codigo, mensagem){
-        return ResponseHandler.error(res, 422, codigo, mensagem);
+        return ResponseHandler.error(res, 422, mensagem, codigo);
     }
 }
 
