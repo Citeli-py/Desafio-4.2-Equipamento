@@ -1,9 +1,9 @@
 // Importações necessárias
 import { Bicicleta } from '../models/Bicicleta.js';
 import { AluguelApi } from '../api/aluguel.js';
-import { Inclusao } from '../models/InclusaoBicicleta.js';
+import { InclusaoBicicleta } from '../models/InclusaoBicicleta.js';
 import { DateTime } from 'luxon';
-import { Retirada } from '../models/RetiradaBicicleta.js';
+import { RetiradaBicicleta } from '../models/RetiradaBicicleta.js';
 import { Tranca } from '../models/Tranca.js';
 
 import { ErroDadoInvalido, ErroInterno, ErroNaoEncontrado, Sucesso } from '../util/responseHandler.js';
@@ -152,7 +152,7 @@ export class BicicletaController {
             if(tranca.status !== 'LIVRE')
                 return ErroDadoInvalido.toResponse(res, '422', "Tranca não está livre");
 
-            await Inclusao.criarInclusao(bicicleta, tranca);
+            await InclusaoBicicleta.criarInclusao(bicicleta, tranca);
             await tranca.trancar(bicicleta);
             return Sucesso.toResponse(res, {});
 
@@ -198,7 +198,7 @@ export class BicicletaController {
 
             bicicleta.acaoReparador(statusAcaoReparador);
             
-            await Retirada.criarRetirada(bicicleta, funcionario);
+            await RetiradaBicicleta.criarRetirada(bicicleta, funcionario);
             await bicicleta.save();
             await tranca.destrancar();
             

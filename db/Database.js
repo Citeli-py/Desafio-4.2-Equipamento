@@ -1,8 +1,8 @@
 import { Sequelize } from "sequelize";
 
 import { Bicicleta } from "../models/Bicicleta.js";
-import { Inclusao } from "../models/Inclusao.js";
-import { Retirada } from "../models/Retirada.js";
+import { InclusaoBicicleta } from "../models/InclusaoBicicleta.js";
+import { RetiradaBicicleta } from "../models/RetiradaBicicleta.js";
 import { Tranca } from "../models/Tranca.js";
 
 import dotenv from 'dotenv';
@@ -43,8 +43,8 @@ class Database {
         Bicicleta.init(this.#conexao);
         Tranca.init(this.#conexao);
 
-        Inclusao.init(this.#conexao);
-        Retirada.init(this.#conexao);
+        InclusaoBicicleta.init(this.#conexao);
+        RetiradaBicicleta.init(this.#conexao);
     }
 
     /**
