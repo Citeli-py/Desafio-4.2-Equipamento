@@ -1,6 +1,9 @@
 import { Model, DataTypes } from 'sequelize';
+import { DateTime } from 'luxon';
+import { Bicicleta } from './Bicicleta';
+import Tranca from './Tranca';
 
-export class Inclusao extends Model {
+export class InclusaoBicicleta extends Model {
 
   static init(sequelize){
     super.init({
@@ -35,7 +38,16 @@ export class Inclusao extends Model {
     );  
   }
 
-  // static associate(models){
-  //   this.belongsTo(models.Bicicleta, { foreignKey: 'id', as: 'bicicleta' });
-  // }
+  /**
+   * 
+   * @param {Bicicleta} bicicleta 
+   * @param {Tranca} tranca 
+   */
+  static async criarInclusao(bicicleta, tranca){
+    await Inclusao.create({
+        numeroBicicleta: bicicleta.numero,
+        numeroTranca: tranca.numero,
+        dataHora: DateTime.now().toSQL()
+    });
+  }
 };
