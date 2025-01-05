@@ -1,6 +1,8 @@
 import { Tranca } from '../models/Tranca.js';
 import { Bicicleta } from '../models/Bicicleta.js'; 
 
+const STATUS_ENUM = ['LIVRE', 'OCUPADA', 'NOVA', 'APOSENTADA', 'EM_REPARO'];
+
 export class TrancaController {
   // Recuperar todas as trancas
   static async listarTrancas(req, res) {
@@ -15,17 +17,19 @@ export class TrancaController {
   // Cadastrar uma nova tranca
   static async criarTranca(req, res) {
     try {
-      const { numero, localizacao, anoDeFabricacao, modelo } = req.body;
+      const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
+
+      if (status && !STATUS_ENUM.includes(status)) {
+        return res.status(400).json({ error: `Dados Inválidos` });
+      }
 
       const novaTranca = await Tranca.create({ 
         numero, 
         localizacao, 
         anoDeFabricacao, 
-        modelo
+        modelo,
+        status: status || 'NOVA' // Valor padrão como "NOVA"
       });
-
-      novaTranca.status = "NOVA";
-      //atendendo requisito R1 de UC13, todas as trancas geradas possuem status "nova"
 
       return res.status(201).json(novaTranca);
     } catch (error) {
@@ -55,6 +59,10 @@ export class TrancaController {
       const { idTranca } = req.params;
       const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
 
+      if (status && !STATUS_ENUM.includes(status)) {
+        return res.status(400).json({ error: `Status inválido. Os valores permitidos são: ${STATUS_ENUM.join(', ')}` });
+      }
+
       const tranca = await Tranca.findByPk(idTranca);
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
@@ -67,7 +75,7 @@ export class TrancaController {
     }
   }
 
-  // Remover uma tranca (Falta realizar a verificação de bibicletas associadas antes de deletar)
+  // Remover uma tranca (Falta realizar a verificação de bicicletas associadas antes de deletar)
   static async deletarTranca(req, res) {
     try {
       const { idTranca } = req.params;
@@ -77,8 +85,8 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      //apenas trancas sem bicicletas associadas devem ser deletadas
-      tranca.status = 'EXCLUÍDA';
+      // Apenas trancas sem bicicletas associadas devem ser deletadas
+      tranca.status = 'APOSENTADA';
       await tranca.save();
   
       return res.status(200).json({ message: 'Tranca removida com sucesso', tranca });
@@ -114,7 +122,7 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      tranca.status = 'trancada';
+      tranca.status = 'OCUPADA';
       if (bicicletaId) {
         const bicicleta = await Bicicleta.findByPk(bicicletaId);
         if (!bicicleta) {
@@ -122,7 +130,7 @@ export class TrancaController {
         }
 
         tranca.bicicletaId = bicicletaId; // Associação
-        bicicleta.status = 'trancada';
+        bicicleta.status = 'TRANCADA';
         await bicicleta.save();
       }
 
@@ -144,7 +152,7 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      tranca.status = 'destrancada';
+      tranca.status = 'LIVRE';
       if (bicicletaId) {
         const bicicleta = await Bicicleta.findByPk(bicicletaId);
         if (!bicicleta) {
@@ -152,7 +160,7 @@ export class TrancaController {
         }
 
         tranca.bicicletaId = null; // Removendo associação
-        bicicleta.status = 'disponível';
+        bicicleta.status = 'DISPONÍVEL';
         await bicicleta.save();
       }
 
@@ -167,6 +175,10 @@ export class TrancaController {
   static async alterarStatusTranca(req, res) {
     try {
       const { idTranca, acao } = req.params;
+
+      if (!STATUS_ENUM.includes(acao)) {
+        return res.status(400).json({ error: `Ação inválida. Os valores permitidos são: ${STATUS_ENUM.join(', ')}` });
+      }
 
       const tranca = await Tranca.findByPk(idTranca);
       if (!tranca) {
@@ -183,5 +195,3 @@ export class TrancaController {
 }
 
 export default TrancaController;
-
-
