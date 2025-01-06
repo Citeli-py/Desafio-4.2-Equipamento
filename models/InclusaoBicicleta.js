@@ -31,23 +31,10 @@ export class InclusaoBicicleta extends Model {
       },
       {
         sequelize,
-        modelName: 'Inclusao',
-        tableName: 'inclusoes',
+        modelName: 'InclusaoBicicleta',
+        tableName: 'inclusoesBicicleta',
         timestamps: false,
       }
     );  
-  }
-
-  /**
-   * 
-   * @param {Bicicleta} bicicleta 
-   * @param {Tranca} tranca 
-   */
-  static async criarInclusao(bicicleta, tranca){
-    await InclusaoBicicleta.create({
-        numeroBicicleta: bicicleta.numero,
-        numeroTranca: tranca.numero,
-        dataHora: DateTime.now().toSQL()
-    });
   }
 };

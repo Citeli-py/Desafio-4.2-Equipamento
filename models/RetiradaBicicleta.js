@@ -1,5 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
-import { Bicicleta } from './Bicicleta';
+import { Bicicleta } from './Bicicleta.js';
+import { DateTime } from 'luxon';
 
 export class RetiradaBicicleta extends Model {
 
@@ -29,25 +30,10 @@ export class RetiradaBicicleta extends Model {
       },
       {
         sequelize,
-        modelName: 'Retirada',
-        tableName: 'retiradas',
+        modelName: 'RetiradaBicicleta',
+        tableName: 'retiradasBicicleta',
         timestamps: false,
       }
     );  
   }
-
-
-  /**
-   * Cria uma retirada de bicicleta
-   * 
-   * @param {Bicicleta} bicicleta 
-   * @param {Object} funcionario 
-   */
-  static async criarRetirada(bicicleta, funcionario){
-    await RetiradaBicicleta.create({
-        numeroBicicleta: bicicleta.numero,
-        matriculaFuncionario: funcionario.matricula,
-        dataHora: DateTime.now().toSQL()
-    });
-  } 
 };
