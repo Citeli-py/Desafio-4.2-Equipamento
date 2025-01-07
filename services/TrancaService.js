@@ -50,4 +50,40 @@ export class TrancaService {
 
     }
 
+    static async editarTranca(id, numero, localizacao, anoDeFabricacao, modelo, status){
+        // localizacao, status e numero não podem ser editados
+
+        const tranca = await TrancaRepo.getTranca(id);
+        if(!tranca)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
+
+        if(parseInt(anoDeFabricacao).toString() !== anoDeFabricacao)
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Ano de fabricação inválido"}
+        
+        const dados = {};
+        if (anoDeFabricacao !== null && anoDeFabricacao !== "") 
+            dados.anoDeFabricacao = anoDeFabricacao;
+
+        if (modelo !== null && modelo !== "") 
+            dados.modelo = modelo;
+    
+        const resposta = await TrancaRepo.editarTranca(tranca, dados);
+        if(!resposta.sucesso)
+            return resposta;
+
+        const trancaEditada = resposta.tranca;
+        return {
+            sucesso: true, 
+            tranca: {
+                id: trancaEditada.id,
+                bicicleta: trancaEditada.bicicleta,
+                numero: trancaEditada.numero,
+                localizacao: trancaEditada.localizacao,
+                anoDeFabricacao: trancaEditada.anoDeFabricacao,
+                modelo: trancaEditada.modelo,
+                status: trancaEditada.status
+            }
+        };
+    }
+
 }
