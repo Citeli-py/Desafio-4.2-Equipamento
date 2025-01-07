@@ -37,17 +37,15 @@ export class TrancaController {
     try {
       const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
 
-      const novaTranca = await Tranca.create({ 
-        numero, 
-        localizacao, 
-        anoDeFabricacao, 
-        modelo, 
-        status 
-      });
+      const resposta = await TrancaService.criarTranca(numero, localizacao, anoDeFabricacao, modelo, status);
 
-      return res.status(201).json(novaTranca);
+      console.log(resposta)
+      if(!resposta.sucesso)
+        return ErroDadoInvalido.toResponse(res, "422", resposta.mensagem);
+
+      return Sucesso.toResponse(res, resposta.tranca);
     } catch (error) {
-      return res.status(422).json({ error: 'Dados inválidos' });
+      return ErroInterno.toResponse(res, '500', error, 'Criar Tranca');
     }
   }
 

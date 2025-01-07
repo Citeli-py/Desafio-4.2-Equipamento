@@ -27,4 +27,27 @@ export class TrancaService {
         };
     }
 
+    static async criarTranca(numero, localizacao, anoDeFabricacao, modelo, status){
+
+        const respostaRepo = await TrancaRepo.criarTranca(numero, localizacao, anoDeFabricacao, modelo, status);
+
+        if (!respostaRepo.sucesso)
+            return respostaRepo;
+
+        const tranca = respostaRepo.tranca;
+        return {
+            sucesso: true, 
+            tranca: {
+                id: tranca.id,
+                bicicleta: tranca.bicicleta,
+                numero: tranca.numero,
+                localizacao: tranca.localizacao,
+                anoDeFabricacao: tranca.anoDeFabricacao,
+                modelo: tranca.modelo,
+                status: tranca.status
+            }
+        };
+
+    }
+
 }

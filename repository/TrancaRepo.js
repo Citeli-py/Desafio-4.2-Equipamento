@@ -1,5 +1,6 @@
-import { Op } from 'sequelize';
+import { Op, ValidationError } from 'sequelize';
 import { Tranca } from "../models/Tranca.js"  
+import { DadoInvalido } from '../util/erros.js';
 
 export class TrancaRepo {
 
@@ -25,6 +26,19 @@ export class TrancaRepo {
                 },
             });
         } catch (error) {
+            throw error;
+        }
+    }
+
+    static async criarTranca(numero, localizacao, anoDeFabricacao, modelo, status){
+        try {
+            // O status inicial da tranca será “nova” (esta informação não pode ser editada).
+            const tranca = await Tranca.create({numero, localizacao, anoDeFabricacao, modelo, status: "NOVO"})
+            return {sucesso: true, tranca }
+        } catch(error) {
+            if (error instanceof ValidationError) 
+                return { sucesso: false, erro: DadoInvalido, mensagem: 'Dados inválidos' };
+
             throw error;
         }
     }
