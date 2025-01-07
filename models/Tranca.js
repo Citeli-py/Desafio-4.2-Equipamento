@@ -1,5 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
-import { Bicicleta } from './Bicicleta';  
+import { Bicicleta } from './Bicicleta';
+import { Totem } from './Totem'; 
 
 export class Tranca extends Model {
   static init(sequelize) {
@@ -29,29 +30,37 @@ export class Tranca extends Model {
         status: {
           type: DataTypes.STRING,
           allowNull: false,
-          defaultValue: 'disponível',  
+          defaultValue: 'disponível',
         },
-        bicicletaId: {  
+        bicicletaId: {
           type: DataTypes.INTEGER,
           references: {
             model: Bicicleta,
             key: 'id',
           },
-          allowNull: false,
+          allowNull: true, // Bicicleta pode ser nula
+        },
+        idTotem: {
+          type: DataTypes.INTEGER,
+          references: {
+            model: Totem,
+            key: 'id',
+          },
+          allowNull: false, // Toda tranca deve estar associada a um totem
         },
       },
       {
         sequelize,
         modelName: 'Tranca',
-        tableName: 'trancas',  
-        timestamps: false,  
+        tableName: 'trancas',
+        timestamps: false,
       }
     );
   }
 
-  
   static associate(models) {
     this.belongsTo(models.Bicicleta, { foreignKey: 'bicicletaId', as: 'bicicleta' });
+    this.belongsTo(models.Totem, { foreignKey: 'idTotem', as: 'totem' }); // Associação com Totem
   }
 }
 
