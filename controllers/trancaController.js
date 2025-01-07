@@ -111,7 +111,7 @@ export class TrancaController {
 
       tranca.status = 'trancada';
       if (bicicletaId) {
-        const bicicleta = await Bicicleta.findByPk(bicicletaId);
+        const bicicleta = await Bicicleta.getBicicleta(bicicletaId);
         if (!bicicleta) {
           return res.status(404).json({ error: 'Bicicleta não encontrada' });
         }
@@ -141,7 +141,7 @@ export class TrancaController {
 
       tranca.status = 'destrancada';
       if (bicicletaId) {
-        const bicicleta = await Bicicleta.findByPk(bicicletaId);
+        const bicicleta = await Bicicleta.getBicicleta(bicicletaId);
         if (!bicicleta) {
           return res.status(404).json({ error: 'Bicicleta não encontrada' });
         }
