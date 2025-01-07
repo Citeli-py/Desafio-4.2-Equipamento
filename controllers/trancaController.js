@@ -1,12 +1,33 @@
 import { Tranca } from '../models/Tranca.js';
 import { Bicicleta } from '../models/Bicicleta.js'; 
 
+import { ErroDadoInvalido, ErroInterno, ErroNaoEncontrado, Sucesso } from '../util/responseHandler.js';
+
+import { TrancaService } from '../services/TrancaService.js';
+
 export class TrancaController {
+  
   // Recuperar todas as trancas
   static async listarTrancas(req, res) {
     try {
-      const trancas = await Tranca.findAll();
-      return res.status(200).json(trancas);
+      const trancas = await TrancaService.listarTrancas();
+      return Sucesso.toResponse(res, trancas);
+    } catch (error) {
+      return ErroInterno.toResponse(res, '500', error, 'Listar Trancas');
+    }
+  }
+
+  // Obter uma tranca específica
+  static async obterTranca(req, res) {
+    try {
+      const { idTranca } = req.params;
+
+      const tranca = await Tranca.findByPk(idTranca);
+      if (!tranca) {
+        return res.status(404).json({ error: 'Tranca não encontrada' });
+      }
+
+      return res.status(200).json(tranca);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -31,21 +52,6 @@ export class TrancaController {
     }
   }
 
-  // Obter uma tranca específica
-  static async obterTranca(req, res) {
-    try {
-      const { idTranca } = req.params;
-
-      const tranca = await Tranca.findByPk(idTranca);
-      if (!tranca) {
-        return res.status(404).json({ error: 'Tranca não encontrada' });
-      }
-
-      return res.status(200).json(tranca);
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
-    }
-  }
 
   // Editar uma tranca
   static async atualizarTranca(req, res) {
