@@ -3,12 +3,24 @@ import { Bicicleta } from '../models/Bicicleta.js';
 
 const STATUS_ENUM = ['LIVRE', 'OCUPADA', 'NOVA', 'APOSENTADA', 'EM_REPARO'];
 
+class TrancaFormatter {
+  static format(tranca) {
+    const { idTotem, ...formattedTranca } = tranca.toJSON(); // Remove o idTotem
+    return formattedTranca;
+  }
+
+  static formatAll(trancas) {
+    return trancas.map((tranca) => TrancaFormatter.format(tranca));
+  }
+}
+
 export class TrancaController {
   // Recuperar todas as trancas
   static async listarTrancas(req, res) {
     try {
       const trancas = await Tranca.findAll();
-      return res.status(200).json(trancas);
+      const formattedTrancas = TrancaFormatter.formatAll(trancas);
+      return res.status(200).json(formattedTrancas);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -17,18 +29,19 @@ export class TrancaController {
   // Cadastrar uma nova tranca
   static async criarTranca(req, res) {
     try {
-      const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
+      const { numero, localizacao, anoDeFabricacao, modelo, status, idTotem } = req.body;
 
       if (status && !STATUS_ENUM.includes(status)) {
         return res.status(400).json({ error: `Dados Inválidos` });
       }
 
-      const novaTranca = await Tranca.create({ 
-        numero, 
-        localizacao, 
-        anoDeFabricacao, 
+      const novaTranca = await Tranca.create({
+        numero,
+        localizacao,
+        anoDeFabricacao,
         modelo,
-        status: status || 'NOVA' // Valor padrão como "NOVA"
+        status: status || 'NOVA', // Valor padrão como "NOVA"
+        idTotem, // Associando ao Totem
       });
 
       return res.status(201).json(novaTranca);
@@ -47,7 +60,8 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      return res.status(200).json(tranca);
+      const formattedTranca = TrancaFormatter.format(tranca);
+      return res.status(200).json(formattedTranca);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -192,6 +206,7 @@ export class TrancaController {
       return res.status(500).json({ error: error.message });
     }
   }
+  
 }
 
 export default TrancaController;
