@@ -86,4 +86,19 @@ export class TrancaService {
         };
     }
 
+
+    static async deletarTranca(id){
+        // Apenas trancas que não estiverem com nenhuma bicicleta podem ser excluídas.
+        const tranca = await TrancaRepo.getTranca(id);
+        if(!tranca)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
+
+        if(tranca.bicicleta !== null)
+            return {sucesso: false, erro: DadoInvalido, mensagem: "A tranca não pode ser removida por estar com uma bicicleta"};
+
+        await TrancaRepo.deletarTranca(tranca);
+
+        return {sucesso: true};
+    }
+
 }
