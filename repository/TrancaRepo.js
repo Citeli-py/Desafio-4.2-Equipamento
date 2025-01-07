@@ -4,14 +4,31 @@ import { Tranca } from "../models/Tranca.js"
 export class TrancaRepo {
 
     static async getTranca(id){
-        return await Tranca.findOne({
-            where: {
-                id,
-                status: { [Op.ne]: 'EXCLUIDA' },
-            },
-        });
+        try{
+            return await Tranca.findOne({
+                where: {
+                    id,
+                    status: { [Op.ne]: 'EXCLUIDA' },
+                },
+            });
+        } catch(error){
+            throw error;
+        }
     }
 
+    static async getAllTrancas() {
+        try {
+            return await Tranca.findAll({
+                attributes: ["id", "bicicleta", "numero", "localizacao", "anoDeFabricacao", "modelo", "status"],
+                where: {
+                    status: { [Op.ne]: 'EXCLUIDA' },
+                },
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+    
     /**
      * Esse metodo tranca a Tranca, alterando seu status para OCUPADA e associando uma bicicleta a ela, 
      * essa bicicleta tem seu status trocado para disponível
