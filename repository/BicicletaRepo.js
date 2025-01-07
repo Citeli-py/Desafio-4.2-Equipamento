@@ -1,4 +1,4 @@
-import { Op, ValidationError } from 'sequelize';
+import { Op, Transaction, ValidationError } from 'sequelize';
 import { Bicicleta } from '../models/Bicicleta.js';
 import { DadoInvalido } from '../util/erros.js';
 
@@ -19,12 +19,12 @@ export class BicicletaRepo {
     });
   }
 
-  static async criarBicicleta(dados) {
+  static async criarBicicleta(dados, transacao=null) {
     try {
       const bicicleta = await Bicicleta.create({
         ...dados,
         status: 'NOVA',
-      });
+      }, {transaction: transacao});
 
       return { 
         sucesso: true, 
@@ -46,9 +46,16 @@ export class BicicletaRepo {
     }
   }
 
-  static async atualizarBicicleta(bicicleta, dados) {
+  /**
+   * 
+   * @param {Bicicleta} bicicleta - Bicicleta a ser editada
+   * @param {Object} dados - Dados para serem trocados
+   * @param {Transaction} transacao - Transação externa para rollbacks
+   * @returns {{sucesso: boolean, erro?: number, mensagem?: string, bicicleta?: Bicicleta}}
+   */
+  static async atualizarBicicleta(bicicleta, dados, transacao=null) {
     try {
-      await bicicleta.update(dados);
+      await bicicleta.update(dados, {transaction:transacao});
       return { 
         sucesso: true, 
         bicicleta: {
@@ -68,9 +75,15 @@ export class BicicletaRepo {
     }
   }
 
-  static async deletarBicicleta(bicicleta) {
+  /**
+   * Deletar bicicleta
+   * @param {Bicicleta} bicicleta 
+   * @param {Transaction} transacao 
+   * @returns {{sucesso: boolean, bicicleta: Bicicleta}}
+   */
+  static async deletarBicicleta(bicicleta, transacao=null) {
     try {
-      await bicicleta.update({ status: 'EXCLUIDA' });
+      await bicicleta.update({ status: 'EXCLUIDA' }, {transaction: transacao});
       return { 
         sucesso: true, 
         bicicleta: {
@@ -92,13 +105,13 @@ export class BicicletaRepo {
   * @param {Bicicleta} bicicleta 
   * @param {string} statusAcaoReparador - Ação do reparador
   */
-  static async acaoReparador(bicicleta, statusAcaoReparador){
+  static async acaoReparador(bicicleta, statusAcaoReparador, transacao=null){
     if(statusAcaoReparador === "REPARO")
       bicicleta.status = "EM_REPARO";
 
     if(statusAcaoReparador === "APOSENTADORIA")
       bicicleta.status = "APOSENTADA";
 
-    await bicicleta.save();
+    await bicicleta.save({transaction: transacao});
   }
 }

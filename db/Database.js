@@ -81,6 +81,14 @@ class Database {
     }
 
     /**
+     * Cria uma transação
+     * @returns {Transaction}
+     */
+    async createTransaction(){
+        return this.#conexao.transaction();
+    }
+
+    /**
      * Fecha a conexão com o banco
      */
     async close(){

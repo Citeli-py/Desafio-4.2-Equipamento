@@ -4,6 +4,7 @@ import { TrancaRepo } from '../repository/TrancaRepo.js';
 import { AluguelApi } from '../api/aluguel.js'
 import { InclusaoBicicletaRepo} from '../repository/InclusaoBicicletaRepo.js'
 import { RetiradaBicicletaRepo } from '../repository/RetiradaBicicletaRepo.js';
+import Database from '../db/Database.js'
 
 export class BicicletaService {
   static async listarBicicletas() {
@@ -94,8 +95,18 @@ export class BicicletaService {
     if(!funcionario)
       return { sucesso: false, erro: DadoNaoEncontrado, mensagem: 'Funcionário não encontrado' };
 
-    await InclusaoBicicletaRepo.criarInclusao(bicicleta, tranca);
-    await TrancaRepo.trancar(tranca, bicicleta);
+    const transacao = await Database.createTransaction();
+
+    try{
+      await InclusaoBicicletaRepo.criarInclusao(bicicleta, tranca, transacao);
+      await TrancaRepo.trancar(tranca, bicicleta, transacao);
+      await transacao.commit();
+    } catch(error){
+
+      await transacao.rollback();
+      throw error;
+    }
+
     return {sucesso: true};
   }
 
@@ -134,9 +145,19 @@ export class BicicletaService {
         return { sucesso: false, erro: DadoInvalido, mensagem: 'Ação do reparador inválida' };
 
     
-    await RetiradaBicicletaRepo.criarRetirada(bicicleta, funcionario);
-    await BicicletaRepo.acaoReparador(bicicleta, statusAcaoReparador);
-    await TrancaRepo.destrancar(tranca);
+    const transacao = await Database.createTransaction();
+
+    try{
+      await RetiradaBicicletaRepo.criarRetirada(bicicleta, funcionario, transacao);
+      await BicicletaRepo.acaoReparador(bicicleta, statusAcaoReparador, transacao);
+      await TrancaRepo.destrancar(tranca, transacao);
+
+      await transacao.commit();
+    } catch(error){
+
+      await transacao.rollback();
+      throw error;
+    }
     
     return { sucesso: true};
   }
