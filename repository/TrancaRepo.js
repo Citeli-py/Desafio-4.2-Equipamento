@@ -30,6 +30,18 @@ export class TrancaRepo {
         }
     }
 
+    /**
+     * Cria uma tranca no banco de dados seguindo as regras de negócio
+     * 
+     * @param {number} numero - Número da tranca
+     * @param {string} localizacao - Localização da tranca
+     * @param {string} anoDeFabricacao 
+     * @param {string} modelo 
+     * @param {string} status 
+     * @returns {{sucesso: boolean, tranca?: Tranca, erro?: number, mensagem?: string}}
+     * 
+     * @throws {ValidationError}
+     */
     static async criarTranca(numero, localizacao, anoDeFabricacao, modelo, status){
         try {
             // O status inicial da tranca será “nova” (esta informação não pode ser editada).
