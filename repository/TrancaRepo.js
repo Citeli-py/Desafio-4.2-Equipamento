@@ -122,7 +122,9 @@ export class TrancaRepo {
                 transaction.commit();
 
         } catch(error){
-            await transaction.rollback();
+            // Caso não haja uma transação acima dessa
+            if(!transacao_externa)
+                await transaction.rollback();
             throw error;
         }
     }
