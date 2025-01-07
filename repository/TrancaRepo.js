@@ -54,6 +54,18 @@ export class TrancaRepo {
             throw error;
         }
     }
+
+    static async editarTranca(tranca, dados){
+        try{
+            const trancaEditada = await tranca.update(dados);
+            return {sucesso: true, tranca: trancaEditada};
+        } catch (error){
+            if (error instanceof ValidationError) 
+                return { sucesso: false, erro: DadoInvalido, mensagem: 'Dados inválidos' };
+
+            throw error;
+        }
+    }
     
     /**
      * Esse metodo tranca a Tranca, alterando seu status para OCUPADA e associando uma bicicleta a ela, 
