@@ -177,4 +177,29 @@ export class TrancaService {
         };
     }
 
+    static async obterBicicleta(idTranca){
+        const tranca = await TrancaRepo.getTranca(idTranca);
+        if(!tranca)
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Id da tranca inválido"};
+
+        if(!tranca.bicicleta)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Não há bicicleta na tranca"};
+
+        const bicicleta = await BicicletaRepo.getBicicleta(tranca.bicicleta);
+        if(!bicicleta)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Bicicleta não encontrada"};
+
+        return {
+            sucesso: true, 
+            bicicleta: {
+                id: bicicleta.id,
+                marca: bicicleta.marca,
+                modelo: bicicleta.modelo,
+                ano: bicicleta.ano,
+                numero: bicicleta.numero,
+                status: bicicleta.status
+            } 
+        };
+    }
+
 }
