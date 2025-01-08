@@ -130,27 +130,17 @@ export class TrancaController {
   static async destrancarTranca(req, res) {
     try {
       const { idTranca } = req.params;
-      const { bicicletaId } = req.body;
+      const { bicicleta } = req.body;
 
-      const tranca = await Tranca.findByPk(idTranca);
-      if (!tranca) {
-        return res.status(404).json({ error: 'Tranca não encontrada' });
-      }
+      const resposta = await TrancaService.destrancarTranca(idTranca, bicicleta);
 
-      tranca.status = 'destrancada';
-      if (bicicletaId) {
-        const bicicleta = await Bicicleta.getBicicleta(bicicletaId);
-        if (!bicicleta) {
-          return res.status(404).json({ error: 'Bicicleta não encontrada' });
-        }
+      if (!resposta.sucesso && resposta.erro === DadoNaoEncontrado) 
+        return ErroNaoEncontrado.toResponse(res, "404", resposta.mensagem);
+      
+      if (!resposta.sucesso && resposta.erro === DadoInvalido)
+        return ErroDadoInvalido.toResponse(res, "422", resposta.mensagem);
 
-        tranca.bicicletaId = null; // Removendo associação
-        bicicleta.status = 'disponível';
-        await bicicleta.save();
-      }
-
-      await tranca.save();
-      return res.status(200).json(tranca);
+      return Sucesso.toResponse(res, resposta.tranca);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
