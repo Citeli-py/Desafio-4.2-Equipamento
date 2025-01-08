@@ -1,8 +1,12 @@
-import { Bicicleta } from '../models/Bicicleta.js';
 import { DadoFaltante, DadoInvalido, DadoNaoEncontrado } from '../util/erros.js'; 
 import { TrancaRepo } from '../repository/TrancaRepo.js';
 import { BicicletaRepo } from '../repository/BicicletaRepo.js';
-import Tranca from '../models/Tranca.js';
+import {Tranca} from '../models/Tranca.js';
+import { TotemRepo } from '../repository/TotemRepo.js';
+import { AluguelApi } from "../api/aluguel.js"
+import { InclusaoTrancaRepo } from '../repository/InclusaoTrancaRepo.js';
+import { Totem } from '../models/Totem.js';
+import Database from '../db/Database.js';
 
 export class TrancaService {
 
@@ -235,6 +239,50 @@ export class TrancaService {
                 status: tranca.status
             }
         };
+    }
+
+    /**
+     * Integra uma tranca em um totem
+     * @param {number} idTotem - Id totem
+     * @param {number} idTranca - id tranca
+     * @param {number} idFuncionario - id Funcionario
+     * @returns {{sucesso: boolean, erro?: number, mensagem?: string}}
+     */
+    static async integrarNaRede(idTotem, idTranca, idFuncionario){
+
+        const tranca = await TrancaRepo.getTranca(idTranca);
+        if(!tranca)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
+
+        if(["NOVA", "EM_REPARO"].includes(tranca.status))
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Tranca não está apta a ser integrada"};
+
+        const totem = await TotemRepo.getTotem(idTotem);
+        if(!totem)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Totem não encontrado"};
+
+        const funcionario = await AluguelApi.getFuncionario(idFuncionario);
+        if(!funcionario)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Funcionário não encontrada"};
+
+        const transacao = await Database.createTransaction();
+        
+        try{
+            await InclusaoTrancaRepo.criarInclusao(funcionario, tranca, transacao);
+            const resposta = await TrancaRepo.editarTranca(tranca, {status: "LIVRE", idTotem: idTotem}, transacao);
+
+            if(resposta.sucesso)
+                await transacao.commit();
+            else
+                await transacao.rollback();
+    
+        } catch(error){
+    
+            await transacao.rollback();
+            throw error;
+        }
+
+        return {sucesso: true}
     }
 
 }

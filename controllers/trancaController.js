@@ -168,6 +168,25 @@ export class TrancaController {
       return ErroInterno.toResponse(res, "500", error, "Alterar status Tranca");
     }
   }
+
+  static async integrarNaRede(req, res){
+    try {
+      const { idTranca, idTotem, idFuncionario } = req.body;
+
+      const resposta = await TrancaService.integrarNaRede(idTotem, idTranca, idFuncionario);
+
+      if (!resposta.sucesso && resposta.erro === DadoNaoEncontrado) 
+        return ErroDadoInvalido.toResponse(res, "404", resposta.mensagem);
+      
+      if (!resposta.sucesso && resposta.erro === DadoInvalido)
+        return ErroDadoInvalido.toResponse(res, "422", resposta.mensagem);
+
+      return Sucesso.toResponse(res, {});
+
+    } catch (error) {
+      return ErroInterno.toResponse(res, "500", error, "Integrar tranca na rede");
+    }
+  }
 }
 
 export default TrancaController;
