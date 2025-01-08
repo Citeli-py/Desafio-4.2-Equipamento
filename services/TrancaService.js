@@ -1,6 +1,7 @@
 import { Bicicleta } from '../models/Bicicleta.js';
 import { DadoFaltante, DadoInvalido, DadoNaoEncontrado } from '../util/erros.js'; 
 import { TrancaRepo } from '../repository/TrancaRepo.js';
+import { BicicletaRepo } from '../repository/BicicletaRepo.js';
 
 export class TrancaService {
 
@@ -99,6 +100,37 @@ export class TrancaService {
         await TrancaRepo.deletarTranca(tranca);
 
         return {sucesso: true};
+    }
+
+    static async trancarTranca(idTranca, idBicicleta){
+        // Realiza o trancamento da tranca alterando o status da mesma de acordo. 
+        // Caso receba o id da bicleta no corpo do post também altera o status da mesma e associa a tranca à bicicleta.
+
+        const tranca = await TrancaRepo.getTranca(idTranca);
+        if(!tranca)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
+
+        if(tranca.status === "OCUPADA")
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Tranca já está trancada"};
+
+        const bicicleta = await BicicletaRepo.getBicicleta(idBicicleta);
+        if(!bicicleta)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Bicicleta não encontrada"};
+
+        await TrancaRepo.trancar(tranca, bicicleta);
+        return {
+            sucesso: true, 
+            tranca: {
+                id: tranca.id,
+                bicicleta: tranca.bicicleta,
+                numero: tranca.numero,
+                localizacao: tranca.localizacao,
+                anoDeFabricacao: tranca.anoDeFabricacao,
+                modelo: tranca.modelo,
+                status: tranca.status
+            }
+        };
+
     }
 
 }
