@@ -1,4 +1,4 @@
-import { Sequelize } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 
 import { Bicicleta } from "../models/Bicicleta.js";
 import { InclusaoBicicleta } from "../models/InclusaoBicicleta.js";
@@ -29,7 +29,7 @@ class Database {
         this.#conexao = new Sequelize(env.DATABASE, env.DB_USER, env.DB_PASSWORD, {
             dialect: "postgres",
             host: process.env.DB_HOST,
-            logging: false,
+            logging: true,
         });
 
         this.init();

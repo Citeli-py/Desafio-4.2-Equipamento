@@ -1,33 +1,20 @@
 import { Tranca } from '../models/Tranca.js';
 import { Bicicleta } from '../models/Bicicleta.js'; 
 
+import { ErroDadoInvalido, ErroInterno, ErroNaoEncontrado, Sucesso } from '../util/responseHandler.js';
+
+import { TrancaService } from '../services/TrancaService.js';
+import { DadoInvalido, DadoNaoEncontrado } from '../util/erros.js';
+
 export class TrancaController {
+
   // Recuperar todas as trancas
   static async listarTrancas(req, res) {
     try {
-      const trancas = await Tranca.findAll();
-      return res.status(200).json(trancas);
+      const trancas = await TrancaService.listarTrancas();
+      return Sucesso.toResponse(res, trancas);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
-    }
-  }
-
-  // Cadastrar uma nova tranca
-  static async criarTranca(req, res) {
-    try {
-      const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
-
-      const novaTranca = await Tranca.create({ 
-        numero, 
-        localizacao, 
-        anoDeFabricacao, 
-        modelo, 
-        status 
-      });
-
-      return res.status(201).json(novaTranca);
-    } catch (error) {
-      return res.status(422).json({ error: 'Dados inválidos' });
+      return ErroInterno.toResponse(res, '500', error, 'Listar Trancas');
     }
   }
 
@@ -36,16 +23,33 @@ export class TrancaController {
     try {
       const { idTranca } = req.params;
 
-      const tranca = await Tranca.findByPk(idTranca);
-      if (!tranca) {
-        return res.status(404).json({ error: 'Tranca não encontrada' });
-      }
+      const resposta = await TrancaService.obterTranca(idTranca);
+      if (!resposta.sucesso) 
+        return ErroNaoEncontrado.toResponse(res, "404", resposta.mensagem);
 
-      return res.status(200).json(tranca);
+      return Sucesso.toResponse(res, resposta.tranca);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, '500', error, 'Obter Tranca');
     }
   }
+
+  // Cadastrar uma nova tranca
+  static async criarTranca(req, res) {
+    try {
+      const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
+
+      const resposta = await TrancaService.criarTranca(numero, localizacao, anoDeFabricacao, modelo, status);
+
+      console.log(resposta)
+      if(!resposta.sucesso)
+        return ErroDadoInvalido.toResponse(res, "422", resposta.mensagem);
+
+      return Sucesso.toResponse(res, resposta.tranca);
+    } catch (error) {
+      return ErroInterno.toResponse(res, '500', error, 'Criar Tranca');
+    }
+  }
+
 
   // Editar uma tranca
   static async atualizarTranca(req, res) {
@@ -53,15 +57,16 @@ export class TrancaController {
       const { idTranca } = req.params;
       const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
 
-      const tranca = await Tranca.findByPk(idTranca);
-      if (!tranca) {
-        return res.status(404).json({ error: 'Tranca não encontrada' });
-      }
+      const resposta = await TrancaService.editarTranca(idTranca, numero, localizacao, anoDeFabricacao, modelo, status);
+      if (!resposta.sucesso && resposta.erro === DadoNaoEncontrado) 
+        return ErroNaoEncontrado.toResponse(res, "404", resposta.mensagem);
 
-      await tranca.update({ numero, localizacao, anoDeFabricacao, modelo, status });
-      return res.status(200).json({ message: 'Dados atualizados com sucesso', tranca });
+      if(!resposta.sucesso && resposta.erro === DadoInvalido)
+        return ErroDadoInvalido.toResponse(res, "422", resposta.mensagem);
+
+      return Sucesso.toResponse(res, resposta.tranca);
     } catch (error) {
-      return res.status(422).json({ error: 'Dados inválidos' });
+      return ErroInterno.toResponse(res, '500', error, 'Atualizar Tranca');
     }
   }
 
@@ -70,15 +75,18 @@ export class TrancaController {
     try {
       const { idTranca } = req.params;
 
-      const tranca = await Tranca.findByPk(idTranca);
-      if (!tranca) {
-        return res.status(404).json({ error: 'Tranca não encontrada' });
-      }
+      const resposta = await TrancaService.deletarTranca(idTranca);
 
-      await tranca.destroy();
-      return res.status(200).json({ message: 'Tranca removida com sucesso' });
+      if (!resposta.sucesso && resposta.erro === DadoNaoEncontrado) 
+        return ErroNaoEncontrado.toResponse(res, "404", resposta.mensagem);
+      
+      if (!resposta.sucesso && resposta.erro === DadoInvalido)
+        return ErroDadoInvalido.toResponse(res, "404", resposta.mensagem);
+
+      return Sucesso.toResponse(res, resposta.tranca);
+      
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, '500', error, 'Deletar Tranca');
     }
   }
 
