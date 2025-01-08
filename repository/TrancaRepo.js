@@ -3,6 +3,7 @@ import { Tranca } from "../models/Tranca.js"
 import { DadoInvalido } from '../util/erros.js';
 
 import Database from '../db/Database.js';
+import { Bicicleta } from '../models/Bicicleta.js';
 
 export class TrancaRepo {
 
@@ -132,15 +133,33 @@ export class TrancaRepo {
     /**
      * Metodo para destrancar a tranca, retirando a associação com uma bicicleta e alterando seu status para LIVRE
      * @param {Tranca} tranca 
+     * @param {Bicicleta} bicicleta 
      * @param {Transaction|null} [transacao_externa=null] - Transação a ser associada
      */
-    static async destrancar(tranca, transacao_externa=null){
+    static async destrancar(tranca, bicicleta, transacao_externa=null){
+
+        let transaction = transacao_externa
+        if(!transacao_externa)
+            transaction = await Database.createTransaction();
+
         try{
+            if(bicicleta){
+                bicicleta.status = "LIVRE";
+                await bicicleta.save({transaction});
+            }
             tranca.bicicleta = null;
             tranca.status = "LIVRE";
-            await tranca.save({transaction: transacao_externa});
+            await tranca.save({transaction});
+
+            // Caso não haja uma transação acima dessa
+            if(!transacao_externa)
+                transaction.commit();
 
         } catch(error){
+            // Caso não haja uma transação acima dessa
+            if(!transacao_externa)
+                transaction.rollback();
+
             throw error;
         }
     }
