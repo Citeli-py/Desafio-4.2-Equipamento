@@ -1,18 +1,5 @@
 import { Tranca } from '../models/Tranca.js';
-import { Bicicleta } from '../models/Bicicleta.js'; 
-
-const STATUS_ENUM = ['LIVRE', 'OCUPADA', 'NOVA', 'APOSENTADA', 'EM_REPARO'];
-
-class TrancaFormatter {
-  static format(tranca) {
-    const { idTotem, ...formattedTranca } = tranca.toJSON(); // Remove o idTotem
-    return formattedTranca;
-  }
-
-  static formatAll(trancas) {
-    return trancas.map((tranca) => TrancaFormatter.format(tranca));
-  }
-}
+import { Bicicleta } from '../models/Bicicleta.js';
 
 export class TrancaController {
   // Recuperar todas as trancas
@@ -29,22 +16,21 @@ export class TrancaController {
   // Cadastrar uma nova tranca
   static async criarTranca(req, res) {
     try {
-      const { numero, localizacao, anoDeFabricacao, modelo, status, idTotem } = req.body;
-
-      if (status && !STATUS_ENUM.includes(status)) {
-        return res.status(400).json({ error: `Dados Inválidos` });
-      }
+      const { numero, localizacao, anoDeFabricacao, modelo, idTotem } = req.body;
 
       const novaTranca = await Tranca.create({
         numero,
         localizacao,
         anoDeFabricacao,
         modelo,
-        status: status || 'NOVA', // Valor padrão como "NOVA"
-        idTotem, // Associando ao Totem
+        idTotem,
       });
 
-      return res.status(201).json(novaTranca);
+      novaTranca.status = 'NOVA';
+      await novaTranca.save();
+
+      const formattedTranca = TrancaFormatter.format(novaTranca);
+      return res.status(201).json(formattedTranca);
     } catch (error) {
       return res.status(422).json({ error: 'Dados inválidos' });
     }
@@ -71,39 +57,37 @@ export class TrancaController {
   static async atualizarTranca(req, res) {
     try {
       const { idTranca } = req.params;
-      const { numero, localizacao, anoDeFabricacao, modelo, status } = req.body;
-
-      if (status && !STATUS_ENUM.includes(status)) {
-        return res.status(400).json({ error: `Status inválido. Os valores permitidos são: ${STATUS_ENUM.join(', ')}` });
-      }
+      const { numero, localizacao, anoDeFabricacao, modelo, status, idTotem } = req.body;
 
       const tranca = await Tranca.findByPk(idTranca);
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      await tranca.update({ numero, localizacao, anoDeFabricacao, modelo, status });
-      return res.status(200).json({ message: 'Dados atualizados com sucesso', tranca });
+      await tranca.update({ numero, localizacao, anoDeFabricacao, modelo, status, idTotem });
+      const formattedTranca = TrancaFormatter.format(tranca);
+
+      return res.status(200).json({ message: 'Dados atualizados com sucesso', tranca: formattedTranca });
     } catch (error) {
       return res.status(422).json({ error: 'Dados inválidos' });
     }
   }
 
-  // Remover uma tranca (Falta realizar a verificação de bicicletas associadas antes de deletar)
+  // Remover uma tranca (apenas sem bicicletas associadas)
   static async deletarTranca(req, res) {
     try {
       const { idTranca } = req.params;
-  
+
       const tranca = await Tranca.findByPk(idTranca);
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      // Apenas trancas sem bicicletas associadas devem ser deletadas
-      tranca.status = 'APOSENTADA';
+      tranca.status = 'EXCLUÍDA';
       await tranca.save();
-  
-      return res.status(200).json({ message: 'Tranca removida com sucesso', tranca });
+
+      const formattedTranca = TrancaFormatter.format(tranca);
+      return res.status(200).json({ message: 'Tranca removida com sucesso', tranca: formattedTranca });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -119,7 +103,8 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      return res.status(200).json(tranca.Bicicleta || { message: 'Nenhuma bicicleta associada' });
+      const bicicleta = tranca.Bicicleta || { message: 'Nenhuma bicicleta associada' };
+      return res.status(200).json(bicicleta);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -136,20 +121,22 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      tranca.status = 'OCUPADA';
+      tranca.status = 'trancada';
       if (bicicletaId) {
         const bicicleta = await Bicicleta.findByPk(bicicletaId);
         if (!bicicleta) {
           return res.status(404).json({ error: 'Bicicleta não encontrada' });
         }
 
-        tranca.bicicletaId = bicicletaId; // Associação
-        bicicleta.status = 'TRANCADA';
+        tranca.bicicletaId = bicicletaId;
+        bicicleta.status = 'trancada';
         await bicicleta.save();
       }
 
       await tranca.save();
-      return res.status(200).json(tranca);
+      const formattedTranca = TrancaFormatter.format(tranca);
+
+      return res.status(200).json(formattedTranca);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -166,20 +153,22 @@ export class TrancaController {
         return res.status(404).json({ error: 'Tranca não encontrada' });
       }
 
-      tranca.status = 'LIVRE';
+      tranca.status = 'destrancada';
       if (bicicletaId) {
         const bicicleta = await Bicicleta.findByPk(bicicletaId);
         if (!bicicleta) {
           return res.status(404).json({ error: 'Bicicleta não encontrada' });
         }
 
-        tranca.bicicletaId = null; // Removendo associação
-        bicicleta.status = 'DISPONÍVEL';
+        tranca.bicicletaId = null;
+        bicicleta.status = 'disponível';
         await bicicleta.save();
       }
 
       await tranca.save();
-      return res.status(200).json(tranca);
+      const formattedTranca = TrancaFormatter.format(tranca);
+
+      return res.status(200).json(formattedTranca);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -190,10 +179,6 @@ export class TrancaController {
     try {
       const { idTranca, acao } = req.params;
 
-      if (!STATUS_ENUM.includes(acao)) {
-        return res.status(400).json({ error: `Ação inválida. Os valores permitidos são: ${STATUS_ENUM.join(', ')}` });
-      }
-
       const tranca = await Tranca.findByPk(idTranca);
       if (!tranca) {
         return res.status(404).json({ error: 'Tranca não encontrada' });
@@ -201,12 +186,25 @@ export class TrancaController {
 
       tranca.status = acao;
       await tranca.save();
-      return res.status(200).json(tranca);
+
+      const formattedTranca = TrancaFormatter.format(tranca);
+      return res.status(200).json(formattedTranca);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
-  
 }
 
 export default TrancaController;
+
+// Classe para formatar os dados da tranca
+class TrancaFormatter {
+  static format(tranca) {
+    const { idTotem, ...formattedTranca } = tranca.toJSON(); // Remove o idTotem
+    return formattedTranca;
+  }
+
+  static formatAll(trancas) {
+    return trancas.map((tranca) => TrancaFormatter.format(tranca));
+  }
+}
