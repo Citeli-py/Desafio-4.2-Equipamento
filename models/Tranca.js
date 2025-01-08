@@ -1,6 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
-import { Bicicleta } from './Bicicleta';
-import { Totem } from './Totem'; 
+import { Bicicleta } from './Bicicleta';  
+import { Totem } from './Totem'; // Importação do modelo Totem
 
 export class Tranca extends Model {
   static init(sequelize) {
@@ -30,30 +30,30 @@ export class Tranca extends Model {
         status: {
           type: DataTypes.STRING,
           allowNull: false,
-          defaultValue: 'disponível',
+          defaultValue: 'disponível',  
         },
-        bicicletaId: {
+        bicicletaId: {  
           type: DataTypes.INTEGER,
           references: {
             model: Bicicleta,
             key: 'id',
           },
-          allowNull: true, // Bicicleta pode ser nula
+          allowNull: true, 
         },
-        idTotem: {
+        idTotem: {  
           type: DataTypes.INTEGER,
           references: {
             model: Totem,
             key: 'id',
           },
-          allowNull: false, // Toda tranca deve estar associada a um totem
+          allowNull: false, 
         },
       },
       {
         sequelize,
         modelName: 'Tranca',
-        tableName: 'trancas',
-        timestamps: false,
+        tableName: 'trancas',  
+        timestamps: false,  
       }
     );
   }
