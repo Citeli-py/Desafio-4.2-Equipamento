@@ -95,14 +95,17 @@ export class TrancaController {
     try {
       const { idTranca } = req.params;
 
-      const tranca = await Tranca.findByPk(idTranca, { include: Bicicleta });
-      if (!tranca) {
-        return res.status(404).json({ error: 'Tranca não encontrada' });
-      }
+      const resposta = await TrancaService.obterBicicleta(idTranca);
+      if (!resposta.sucesso && resposta.erro === DadoNaoEncontrado) 
+        return ErroNaoEncontrado.toResponse(res, "404", resposta.mensagem);
+      
+      if (!resposta.sucesso && resposta.erro === DadoInvalido)
+        return ErroDadoInvalido.toResponse(res, "422", resposta.mensagem);
 
-      return res.status(200).json(tranca.Bicicleta || { message: 'Nenhuma bicicleta associada' });
+
+      return Sucesso.toResponse(res, resposta.bicicleta);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, '500', error, 'Obter bicicleta na tranca');
     }
   }
 
@@ -142,7 +145,7 @@ export class TrancaController {
 
       return Sucesso.toResponse(res, resposta.tranca);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, "500", error, "Destrancar Tranca");
     }
   }
 
