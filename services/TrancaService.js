@@ -113,9 +113,11 @@ export class TrancaService {
         if(tranca.status === "OCUPADA")
             return {sucesso: false, erro: DadoInvalido, mensagem: "Tranca já está trancada"};
 
-        const bicicleta = await BicicletaRepo.getBicicleta(idBicicleta);
-        if(!bicicleta)
-            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Bicicleta não encontrada"};
+        if(idBicicleta) {
+            const bicicleta = await BicicletaRepo.getBicicleta(idBicicleta);
+            if(!bicicleta)
+                return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Bicicleta não encontrada"};
+        }
 
         await TrancaRepo.trancar(tranca, bicicleta);
         return {
@@ -130,6 +132,10 @@ export class TrancaService {
                 status: tranca.status
             }
         };
+
+    }
+
+    static async destrancarTranca(idTranca, idBicicleta){
 
     }
 
