@@ -5,6 +5,7 @@ import { AluguelApi } from '../api/aluguel.js'
 import { InclusaoBicicletaRepo} from '../repository/InclusaoBicicletaRepo.js'
 import { RetiradaBicicletaRepo } from '../repository/RetiradaBicicletaRepo.js';
 import Database from '../db/Database.js'
+import { ExternoApi } from '../api/externo.js';
 
 export class BicicletaService {
   static async listarBicicletas() {
@@ -148,11 +149,15 @@ export class BicicletaService {
     const transacao = await Database.createTransaction();
 
     try{
-      await RetiradaBicicletaRepo.criarRetirada(bicicleta, funcionario, transacao);
+      const retirada = await RetiradaBicicletaRepo.criarRetirada(bicicleta, funcionario, transacao);
       await BicicletaRepo.acaoReparador(bicicleta, statusAcaoReparador, transacao);
-      await TrancaRepo.destrancar(tranca, transacao);
+      await TrancaRepo.destrancar(tranca, bicicleta, transacao);
 
       await transacao.commit();
+      
+      if(statusAcaoReparador === "APOSENTADORIA")
+        await ExternoApi.enviarEmail(funcionario.email, `Retirada da bicicleta ${bicicleta.id} para a aposentadoria`, retirada.toJSON());
+
     } catch(error){
 
       await transacao.rollback();
