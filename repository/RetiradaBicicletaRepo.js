@@ -11,9 +11,10 @@ export class RetiradaBicicletaRepo{
    * @param {Bicicleta} bicicleta 
    * @param {Object} funcionario 
    * @param {Transaction|null} [transacao=null] 
+   * @returns {RetiradaBicicleta}
    */
   static async criarRetirada(bicicleta, funcionario, transacao=null){
-    await RetiradaBicicleta.create({
+    return await RetiradaBicicleta.create({
         numeroBicicleta: bicicleta.numero,
         matriculaFuncionario: funcionario.matricula,
         dataHora: DateTime.now().toSQL()
