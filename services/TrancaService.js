@@ -2,6 +2,7 @@ import { Bicicleta } from '../models/Bicicleta.js';
 import { DadoFaltante, DadoInvalido, DadoNaoEncontrado } from '../util/erros.js'; 
 import { TrancaRepo } from '../repository/TrancaRepo.js';
 import { BicicletaRepo } from '../repository/BicicletaRepo.js';
+import Tranca from '../models/Tranca.js';
 
 export class TrancaService {
 
@@ -199,6 +200,40 @@ export class TrancaService {
                 numero: bicicleta.numero,
                 status: bicicleta.status
             } 
+        };
+    }
+
+    /**
+     * Altera o status de uma tranca
+     * @param {number} idTranca - ID da tranca
+     * @param {string} status - novo status da tranca
+     * @returns {{sucesso: boolean, erro?: number, mensagem?: string, tranca?: Tranca}}
+     */
+    static async alterarStatus(idTranca, status){
+        const status_possiveis = ['LIVRE', 'OCUPADA', 'NOVA', 'APOSENTADA', 'EM_REPARO'];
+
+        if(!status_possiveis.includes(status))
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Status inválido"};
+
+        const tranca = await TrancaRepo.getTranca(idTranca);
+        if(!tranca)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
+
+        const resposta = await TrancaRepo.editarTranca(tranca, {status});
+        if(!resposta.sucesso)
+            return resposta;
+
+        return {
+            sucesso: true,
+            tranca: {
+                id: tranca.id,
+                bicicleta: tranca.bicicleta,
+                numero: tranca.numero,
+                localizacao: tranca.localizacao,
+                anoDeFabricacao: tranca.anoDeFabricacao,
+                modelo: tranca.modelo,
+                status: tranca.status
+            }
         };
     }
 
