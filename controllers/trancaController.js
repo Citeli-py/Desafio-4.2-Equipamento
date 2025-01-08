@@ -154,16 +154,18 @@ export class TrancaController {
     try {
       const { idTranca, acao } = req.params;
 
-      const tranca = await Tranca.findByPk(idTranca);
-      if (!tranca) {
-        return res.status(404).json({ error: 'Tranca não encontrada' });
-      }
+      const resposta = await TrancaService.alterarStatus(idTranca, acao);
 
-      tranca.status = acao;
-      await tranca.save();
-      return res.status(200).json(tranca);
+      if (!resposta.sucesso && resposta.erro === DadoNaoEncontrado) 
+        return ErroNaoEncontrado.toResponse(res, "404", resposta.mensagem);
+      
+      if (!resposta.sucesso && resposta.erro === DadoInvalido)
+        return ErroDadoInvalido.toResponse(res, "422", resposta.mensagem);
+
+      return Sucesso.toResponse(res, resposta.tranca);
+
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, "500", error, "Alterar status Tranca");
     }
   }
 }
