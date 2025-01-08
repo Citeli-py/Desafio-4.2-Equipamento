@@ -1,6 +1,4 @@
 import { Model, DataTypes } from 'sequelize';
-import { Bicicleta } from './Bicicleta.js';
-import { DateTime } from 'luxon';
 
 export class RetiradaBicicleta extends Model {
 
@@ -18,7 +16,7 @@ export class RetiradaBicicleta extends Model {
         },
 
         matriculaFuncionario: {
-          type: DataTypes.INTEGER,
+          type: DataTypes.STRING,
           allowNull: false
         },
 
