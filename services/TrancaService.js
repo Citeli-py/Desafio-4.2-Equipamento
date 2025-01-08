@@ -113,8 +113,9 @@ export class TrancaService {
         if(tranca.status === "OCUPADA")
             return {sucesso: false, erro: DadoInvalido, mensagem: "Tranca já está trancada"};
 
+        let bicicleta = null;
         if(idBicicleta) {
-            const bicicleta = await BicicletaRepo.getBicicleta(idBicicleta);
+            bicicleta = await BicicletaRepo.getBicicleta(idBicicleta);
             if(!bicicleta)
                 return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Bicicleta não encontrada"};
         }
@@ -136,7 +137,44 @@ export class TrancaService {
     }
 
     static async destrancarTranca(idTranca, idBicicleta){
+        // Realiza o destrancamento da tranca alterando o status da mesma de acordo. 
+        // Caso receba o id da bicleta no corpo do post também altera o status da mesma e desassocia a tranca à bicicleta.
 
+        const tranca = await TrancaRepo.getTranca(idTranca);
+        if(!tranca)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
+
+        if(tranca.status !== "OCUPADA")
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Tranca já está destrancada"};
+
+        // Se existir uma bicicleta presa na tranca o status dela tem que ser alterado, logo não é possivel fazer a operação assim
+        if(!idBicicleta && tranca.bicicleta)
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Deve ser informada a bicicleta presa na tranca"};
+
+        let bicicleta = null;
+        if(idBicicleta) {
+            bicicleta = await BicicletaRepo.getBicicleta(idBicicleta);
+            if(!bicicleta)
+                return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Bicicleta não encontrada"};
+
+            if(bicicleta.id !== tranca.bicicleta)
+                return {sucesso: false, erro: DadoInvalido, mensagem: "Tranca não possui a bicicleta informada"};
+        }
+
+        await TrancaRepo.destrancar(tranca, bicicleta);
+
+        return {
+            sucesso: true, 
+            tranca: {
+                id: tranca.id,
+                bicicleta: tranca.bicicleta,
+                numero: tranca.numero,
+                localizacao: tranca.localizacao,
+                anoDeFabricacao: tranca.anoDeFabricacao,
+                modelo: tranca.modelo,
+                status: tranca.status
+            }
+        };
     }
 
 }
