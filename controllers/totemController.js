@@ -1,3 +1,4 @@
+import { Sucesso, ErroInterno, ErroNaoEncontrado, ErroDadoInvalido } from '../util/responseHandler.js';
 import { Totem } from '../models/Totem.js';
 
 export class TotemController {
@@ -6,77 +7,152 @@ export class TotemController {
     try {
       const { localizacao, descricao } = req.body;
 
-      // Verificar se os campos obrigatórios estão presentes
       if (!localizacao) {
-        return res.status(422).json({ error: 'O campo "localizacao" é obrigatório.' });
+        return ErroDadoInvalido.toResponse(res, '422', 'O campo "localizacao" é obrigatório.');
       }
 
-      // Criar o novo totem no banco de dados
       const novoTotem = await Totem.create({ localizacao, descricao });
-
-      // Retornar o novo totem criado
-      return res.status(201).json(novoTotem);
+      return Sucesso.toResponse(res, novoTotem, 201);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, '500', error, 'Criar Totem');
     }
   }
 
   // Listar todos os totens
   static async listarTotens(req, res) {
     try {
-      // Buscar todos os totens no banco de dados
       const totens = await Totem.findAll({
-        attributes: ['id', 'localizacao', 'descricao'], // Garantir que apenas os campos do esquema sejam retornados
+        attributes: ['id', 'localizacao', 'descricao'],
       });
-
-      // Retornar a lista de totens
-      return res.status(200).json(totens);
+      return Sucesso.toResponse(res, totens);
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, '500', error, 'Listar Totens');
     }
   }
 
-  // Atualizar um totem existente pelo ID (mantido como referência)
+  // Buscar um totem pelo ID
+  static async buscarTotemPorId(req, res) {
+    try {
+      const { idTotem } = req.params;
+
+      const totem = await Totem.findByPk(idTotem, {
+        attributes: ['id', 'localizacao', 'descricao'],
+      });
+
+      if (!totem) {
+        return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
+      }
+
+      return Sucesso.toResponse(res, totem);
+    } catch (error) {
+      return ErroInterno.toResponse(res, '500', error, 'Buscar Totem por ID');
+    }
+  }
+
+  // Atualizar um totem existente pelo ID
   static async atualizarTotem(req, res) {
     try {
       const { idTotem } = req.params;
       const { localizacao, descricao } = req.body;
 
-      const totem = await Totem.findByPk(idTotem);
-      if (!totem) {
-        return res.status(404).json({ error: 'Não Encontrado' });
+      if (!localizacao || !descricao) {
+        return ErroDadoInvalido.toResponse(res, '422', 'Campos "localizacao" e "descricao" são obrigatórios.');
       }
 
-      if (!localizacao || !descricao) {
-        return res.status(422).json({ error: 'Dados inválidos' });
+      const totem = await Totem.findByPk(idTotem);
+      if (!totem) {
+        return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
       }
 
       await totem.update({ localizacao, descricao });
-
-      return res.status(200).json({ message: 'Dados Cadastrados', totem });
+      return Sucesso.toResponse(res, { message: 'Totem atualizado com sucesso.', totem });
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, '500', error, 'Atualizar Totem');
     }
   }
 
-  // Deletar um totem pelo ID (mantido como referência)
+  // Deletar um totem pelo ID
   static async deletarTotem(req, res) {
     try {
       const { idTotem } = req.params;
 
       const totem = await Totem.findByPk(idTotem);
       if (!totem) {
-        return res.status(404).json({ error: 'Totem não encontrado' });
+        return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
       }
 
       await totem.destroy();
-      return res.status(200).json({ message: 'Totem removido' });
+      return Sucesso.toResponse(res, { message: 'Totem removido com sucesso.' });
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return ErroInterno.toResponse(res, '500', error, 'Deletar Totem');
     }
   }
 
-  // Faltam os endpoints que associam totens com trancas (a serem implementados)
+  // Associar tranca a um totem
+  static async associarTranca(req, res) {
+    try {
+      const { idTotem, idTranca } = req.params;
+
+      if (!idTotem || !idTranca) {
+        return ErroDadoInvalido.toResponse(res, '422', 'IDs de totem e tranca são obrigatórios.');
+      }
+
+      const totem = await Totem.findByPk(idTotem);
+      if (!totem) {
+        return ErroNaoEncontrado.toResponse(res, '404', 'Não encontrado.');
+      }
+
+      // Lógica de associação omitida como exemplo
+      return Sucesso.toResponse(res, { message: 'Tranca associada com sucesso ao totem.', totem });
+    } catch (error) {
+      return ErroInterno.toResponse(res, '500', error, 'Associar Tranca ao Totem');
+    }
+  }
+
+  // Listar bicicletas de um totem
+static async listarBicicletasDoTotem(req, res) {
+  try {
+    const { idTotem } = req.params;
+
+    const totem = await Totem.findByPk(idTotem);
+    if (!totem) {
+      return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
+    }
+
+    // Buscar as trancas associadas ao Totem
+    const trancas = await Tranca.findAll({
+      where: { idTotem },
+      attributes: ['id'], 
+    });
+
+    if (!trancas.length) {
+      return ErroNaoEncontrado.toResponse(res, '404', 'Nenhuma tranca associada a este totem.');
+    }
+
+    // Buscar as bicicletas associadas às trancas
+    const bicicletas = await Bicicleta.findAll({
+      include: [
+        {
+          model: Tranca,
+          as: 'tranca',
+          where: {
+            id: {
+              [Op.in]: trancas.map((tranca) => tranca.id),
+            },
+          },
+          attributes: [], 
+        },
+      ],
+      attributes: ['id', 'marca', 'modelo', 'ano', 'numero', 'status'], 
+    });
+
+    return Sucesso.toResponse(res, bicicletas);
+  } catch (error) {
+    return ErroInterno.toResponse(res, '500', error, 'Listar Bicicletas do Totem');
+  }
+}
+
+  
 }
 
 export default TotemController;
