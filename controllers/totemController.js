@@ -85,6 +85,15 @@ export class TotemController {
         return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
       }
 
+      const trancaAssociada = await Tranca.findOne({ where: { idTotem } });
+      if (trancaAssociada) {
+        return ErroNaoEncontrado.toResponse(
+          res,
+          '400',
+          'Há ao menos uma tranca associada a esse totem. Impossível removê-lo.'
+        );
+      }
+
       await totem.destroy();
       return Sucesso.toResponse(res, {});
     } catch (error) {
@@ -152,7 +161,7 @@ static async listarTrancasDoTotem(req, res) {
     // Buscar as trancas associadas ao totem
     const trancas = await Tranca.findAll({
       where: { idTotem },
-      attributes: ['id', 'status', 'modelo'], 
+      attributes: ["id", "bicicleta", "numero", "localizacao","anoDeFabricacao", "modelo","status"], 
     });
 
     if (!trancas.length) {
@@ -169,48 +178,31 @@ static async listarTrancasDoTotem(req, res) {
 }
 
   // Listar bicicletas de um totem
-static async listarBicicletasDoTotem(req, res) {
-  try {
-    const { idTotem } = req.params;
-
-    const totem = await Totem.findByPk(idTotem);
-    if (!totem) {
-      return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
+  static async listarBicicletasDoTotem(req, res) {
+    try {
+      const { idTotem } = req.params;
+  
+      const totem = await Totem.findByPk(idTotem);
+      if (!totem) {
+        return res.status(404).json({ message: 'Totem não encontrado.' });
+      }
+  
+      const trancas = await Tranca.findAll({ where: { idTotem }, attributes: ['id'] });
+      if (!trancas.length) {
+        return res.status(404).json({ message: 'Nenhuma tranca associada a este totem.' });
+      }
+  
+      const trancaIds = trancas.map((tranca) => tranca.id);
+  
+      const bicicletas = mockBicicletas.filter((bicicleta) =>
+        trancaIds.includes(bicicleta.numero)  
+      );
+  
+      return res.status(200).json(bicicletas);
+    } catch (error) {
+      return res.status(500).json({ message: 'Erro interno.', error: error.message });
     }
-
-    // Buscar as trancas associadas ao Totem
-    const trancas = await Tranca.findAll({
-      where: { idTotem },
-      attributes: ['id'], 
-    });
-
-    if (!trancas.length) {
-      return ErroNaoEncontrado.toResponse(res, '404', 'Nenhuma tranca associada a este totem.');
-    }
-
-    // Buscar as bicicletas associadas às trancas
-    const bicicletas = await Bicicleta.findAll({
-      include: [
-        {
-          model: Tranca,
-          as: 'tranca',
-          where: {
-            id: {
-              [Op.in]: trancas.map((tranca) => tranca.id),
-            },
-          },
-          attributes: [], 
-        },
-      ],
-      attributes: ['id', 'marca', 'modelo', 'ano', 'numero', 'status'], 
-    });
-
-    return Sucesso.toResponse(res, bicicletas);
-  } catch (error) {
-    return ErroInterno.toResponse(res, '500', error, 'Listar Bicicletas do Totem');
   }
-}
-
   
 }
 
