@@ -32,7 +32,7 @@ class Database {
         this.#conexao = new Sequelize(env.DATABASE, env.DB_USER, env.DB_PASSWORD, {
             dialect: "postgres",
             host: process.env.DB_HOST,
-            logging: true,
+            logging: false,
         });
 
         this.init();
