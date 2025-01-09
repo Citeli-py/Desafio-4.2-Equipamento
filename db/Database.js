@@ -4,6 +4,9 @@ import { Bicicleta } from "../models/Bicicleta.js";
 import { InclusaoBicicleta } from "../models/InclusaoBicicleta.js";
 import { RetiradaBicicleta } from "../models/RetiradaBicicleta.js";
 import { Tranca } from "../models/Tranca.js";
+import { InclusaoTranca } from "../models/InclusaoTranca.js";
+import { RetiradaTranca } from "../models/RetiradaTranca.js";
+import { Totem } from "../models/Totem.js";
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -41,10 +44,14 @@ class Database {
      */
     init(){
         Bicicleta.init(this.#conexao);
+        Totem.init(this.#conexao);
         Tranca.init(this.#conexao);
 
         InclusaoBicicleta.init(this.#conexao);
         RetiradaBicicleta.init(this.#conexao);
+
+        InclusaoTranca.init(this.#conexao);
+        RetiradaTranca.init(this.#conexao);
     }
 
     /**

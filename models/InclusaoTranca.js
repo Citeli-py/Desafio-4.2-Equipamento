@@ -1,6 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 
-export class RetiradaBicicleta extends Model {
+export class InclusaoTranca extends Model {
 
   static init(sequelize){
     super.init({
@@ -10,26 +10,26 @@ export class RetiradaBicicleta extends Model {
           primaryKey: true,
         },
 
-        numeroBicicleta: {
-          type: DataTypes.INTEGER,
+        matriculaReparador: {
+          type: DataTypes.STRING,
           allowNull: false
         },
 
-        matriculaFuncionario: {
-          type: DataTypes.STRING,
+        numeroTranca: {
+          type: DataTypes.INTEGER,
           allowNull: false
         },
 
         dataHora: {
           type: DataTypes.DATE,
-          allowNull: false
+          allowNull: false,
         }
         
       },
       {
         sequelize,
-        modelName: 'RetiradaBicicleta',
-        tableName: 'retiradasBicicleta',
+        modelName: 'InclusaoTranca',
+        tableName: 'inclusoesTranca',
         timestamps: false,
       }
     );  
