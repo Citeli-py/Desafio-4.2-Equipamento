@@ -17,10 +17,12 @@ app.use(function (req, res, next) {
 
 import bicicletaRoutes from './routes/bicicletaRoutes.js';
 import trancaRoutes from './routes/trancaRoutes.js';
+import totemRoutes from './routes/totemRoutes.js'
 
 // Rotas
 app.use('/bicicleta', bicicletaRoutes);
 app.use('/tranca', trancaRoutes);
+app.use('/totem', totemRoutes);
 
 import Database from './db/Database.js';
 
@@ -29,7 +31,7 @@ const res = await Database.autenticacao()
 if(res.sucess) {
 
   // Sincronizar banco de dados e iniciar o servidor
-  Database.conexao.sync({ force: true }) // Use { force: true } apenas para recriar tabelas ao desenvolver
+  Database.conexao.sync({ force: false }) // Use { force: true } apenas para recriar tabelas ao desenvolver
     .then(() => {
       console.log('Database synced successfully.');
       app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
