@@ -96,23 +96,77 @@ export class TotemController {
   static async associarTranca(req, res) {
     try {
       const { idTotem, idTranca } = req.params;
-
+  
       if (!idTotem || !idTranca) {
         return ErroDadoInvalido.toResponse(res, '422', 'IDs de totem e tranca são obrigatórios.');
       }
-
+  
       const totem = await Totem.findByPk(idTotem);
       if (!totem) {
-        return ErroNaoEncontrado.toResponse(res, '404', 'Não encontrado.');
+        return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
       }
-
-      // Lógica de associação omitida como exemplo
-
-      return Sucesso.toResponse(res, totem );
+  
+      const tranca = await Tranca.findByPk(idTranca);
+      if (!tranca) {
+        return ErroNaoEncontrado.toResponse(res, '404', 'Tranca não encontrada.');
+      }
+  
+      if (tranca.idTotem && tranca.idTotem !== parseInt(idTotem, 10)) {
+        return ErroDadoInvalido.toResponse(
+          res,
+          '422',
+          `A tranca já está associada ao Totem ID ${tranca.idTotem}.`
+        );
+      }
+      tranca.idTotem = idTotem;
+      await tranca.save();
+  
+      return Sucesso.toResponse(res, {
+        message: 'Tranca associada com sucesso ao totem.',
+        tranca: {
+          id: tranca.id,
+          idTotem: tranca.idTotem,
+        },
+      });
     } catch (error) {
       return ErroInterno.toResponse(res, '500', error, 'Associar Tranca ao Totem');
     }
   }
+
+  // Listar todas as trancas de um totem
+static async listarTrancasDoTotem(req, res) {
+  try {
+    const { idTotem } = req.params;
+
+    // Validar o ID do totem
+    if (!idTotem) {
+      return ErroDadoInvalido.toResponse(res, '422', 'ID do totem é obrigatório.');
+    }
+
+    // Verificar se o totem existe
+    const totem = await Totem.findByPk(idTotem);
+    if (!totem) {
+      return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
+    }
+
+    // Buscar as trancas associadas ao totem
+    const trancas = await Tranca.findAll({
+      where: { idTotem },
+      attributes: ['id', 'status', 'modelo'], 
+    });
+
+    if (!trancas.length) {
+      return ErroNaoEncontrado.toResponse(res, '404', 'Nenhuma tranca associada a este totem.');
+    }
+
+    return Sucesso.toResponse(res, {
+      message: 'Trancas encontradas com sucesso.',
+      trancas,
+    });
+  } catch (error) {
+    return ErroInterno.toResponse(res, '500', error, 'Listar Trancas do Totem');
+  }
+}
 
   // Listar bicicletas de um totem
 static async listarBicicletasDoTotem(req, res) {
