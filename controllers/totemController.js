@@ -122,11 +122,8 @@ export class TotemController {
       await tranca.save();
   
       return Sucesso.toResponse(res, {
-        message: 'Tranca associada com sucesso ao totem.',
-        tranca: {
           id: tranca.id,
           idTotem: tranca.idTotem,
-        },
       });
     } catch (error) {
       return ErroInterno.toResponse(res, '500', error, 'Associar Tranca ao Totem');
@@ -159,10 +156,7 @@ static async listarTrancasDoTotem(req, res) {
       return ErroNaoEncontrado.toResponse(res, '404', 'Nenhuma tranca associada a este totem.');
     }
 
-    return Sucesso.toResponse(res, {
-      message: 'Trancas encontradas com sucesso.',
-      trancas,
-    });
+    return Sucesso.toResponse(res, trancas);
   } catch (error) {
     return ErroInterno.toResponse(res, '500', error, 'Listar Trancas do Totem');
   }
