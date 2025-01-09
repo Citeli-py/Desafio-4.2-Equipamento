@@ -1,5 +1,9 @@
 import { Sucesso, ErroInterno, ErroNaoEncontrado, ErroDadoInvalido } from '../util/responseHandler.js';
+import { Op } from 'sequelize';
+
 import { Totem } from '../models/Totem.js';
+import { Tranca } from '../models/Tranca.js';
+import { Bicicleta } from '../models/Bicicleta.js';
 
 export class TotemController {
   // Criar um novo totem
@@ -65,7 +69,7 @@ export class TotemController {
       }
 
       await totem.update({ localizacao, descricao });
-      return Sucesso.toResponse(res, { message: 'Totem atualizado com sucesso.', totem });
+      return Sucesso.toResponse(res, totem);
     } catch (error) {
       return ErroInterno.toResponse(res, '500', error, 'Atualizar Totem');
     }
@@ -82,7 +86,7 @@ export class TotemController {
       }
 
       await totem.destroy();
-      return Sucesso.toResponse(res, { message: 'Totem removido com sucesso.' });
+      return Sucesso.toResponse(res, {});
     } catch (error) {
       return ErroInterno.toResponse(res, '500', error, 'Deletar Totem');
     }
@@ -103,7 +107,8 @@ export class TotemController {
       }
 
       // Lógica de associação omitida como exemplo
-      return Sucesso.toResponse(res, { message: 'Tranca associada com sucesso ao totem.', totem });
+
+      return Sucesso.toResponse(res, totem );
     } catch (error) {
       return ErroInterno.toResponse(res, '500', error, 'Associar Tranca ao Totem');
     }
