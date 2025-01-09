@@ -49,7 +49,7 @@ export class TrancaRepo {
     static async criarTranca(numero, localizacao, anoDeFabricacao, modelo, status, transacao_externa=null){
         try {
             // O status inicial da tranca será “nova” (esta informação não pode ser editada).
-            const tranca = await Tranca.create({numero, localizacao, anoDeFabricacao, modelo, status: "NOVO"}, {transaction: transacao_externa})
+            const tranca = await Tranca.create({numero, localizacao, anoDeFabricacao, modelo, status: "NOVA"}, {transaction: transacao_externa})
             return {sucesso: true, tranca }
         } catch(error) {
             

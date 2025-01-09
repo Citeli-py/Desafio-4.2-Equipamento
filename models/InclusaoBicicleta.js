@@ -1,7 +1,4 @@
 import { Model, DataTypes } from 'sequelize';
-import { DateTime } from 'luxon';
-import { Bicicleta } from './Bicicleta.js';
-import Tranca from './Tranca.js';
 
 export class InclusaoBicicleta extends Model {
 
