@@ -1,4 +1,12 @@
-import { Sequelize } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
+
+import { Bicicleta } from "../models/Bicicleta.js";
+import { InclusaoBicicleta } from "../models/InclusaoBicicleta.js";
+import { RetiradaBicicleta } from "../models/RetiradaBicicleta.js";
+import { Tranca } from "../models/Tranca.js";
+import { InclusaoTranca } from "../models/InclusaoTranca.js";
+import { RetiradaTranca } from "../models/RetiradaTranca.js";
+import { Totem } from "../models/Totem.js";
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -24,7 +32,7 @@ class Database {
         this.#conexao = new Sequelize(env.DATABASE, env.DB_USER, env.DB_PASSWORD, {
             dialect: "postgres",
             host: process.env.DB_HOST,
-            logging: false,
+            logging: true,
         });
 
         this.init();
@@ -35,7 +43,15 @@ class Database {
      * Inicializa os modelos e relacionamentos
      */
     init(){
-        // Inicia modelos e seus relacionamentos
+        Bicicleta.init(this.#conexao);
+        Totem.init(this.#conexao);
+        Tranca.init(this.#conexao);
+
+        InclusaoBicicleta.init(this.#conexao);
+        RetiradaBicicleta.init(this.#conexao);
+
+        InclusaoTranca.init(this.#conexao);
+        RetiradaTranca.init(this.#conexao);
     }
 
     /**
@@ -69,6 +85,14 @@ class Database {
                     return {sucess: false, error: "Erro desconhecido"};
             }
         };
+    }
+
+    /**
+     * Cria uma transação
+     * @returns {Transaction}
+     */
+    async createTransaction(){
+        return this.#conexao.transaction();
     }
 
     /**

@@ -1,44 +1,47 @@
-const { Model, DataTypes } = require('sequelize');
+import { Model, DataTypes } from 'sequelize';
+import { Op, ValidationError } from 'sequelize';
 
-module.exports = (sequelize) => {
-  class Bicicleta extends Model {}
+export class Bicicleta extends Model {
 
-  Bicicleta.init(
-    {
-      id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
+  static init(sequelize){
+    super.init({
+        id: {
+          type: DataTypes.INTEGER,
+          autoIncrement: true,
+          primaryKey: true,
+        },
+        marca: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        modelo: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        ano: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        numero: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+        },
+        status: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          defaultValue: 'NOVA', // Exemplos: 'DISPONIVEL','EM_USO', 'NOVA', 'APOSENTADA', 'REPARO_SOLICITADO', 'EM_REPARO'
+        },
       },
-      marca: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      modelo: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      ano: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      numero: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: false,
-      },
-      status: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: 'disponível', // Exemplos: 'disponível', 'alugada', 'manutenção'
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Bicicleta',
-      tableName: 'bicicletas',
-    }
-  );
+      {
+        sequelize,
+        modelName: 'Bicicleta',
+        tableName: 'bicicletas',
+        timestamps: false,
+      }
+    );  
+  }
 
-  return Bicicleta;
+  static associate(models) {
+    this.hasOne(models.Tranca, {foreignKey: "bicicleta", sourceKey: 'bicicleta', as: 'tranca'});
+  }
 };
