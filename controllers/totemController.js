@@ -85,6 +85,15 @@ export class TotemController {
         return ErroNaoEncontrado.toResponse(res, '404', 'Totem não encontrado.');
       }
 
+      const trancaAssociada = await Tranca.findOne({ where: { idTotem } });
+      if (trancaAssociada) {
+        return ErroNaoEncontrado.toResponse(
+          res,
+          '400',
+          'Há ao menos uma tranca associada a esse totem. Impossível removê-lo.'
+        );
+      }
+
       await totem.destroy();
       return Sucesso.toResponse(res, {});
     } catch (error) {
@@ -149,7 +158,7 @@ static async listarTrancasDoTotem(req, res) {
     // Buscar as trancas associadas ao totem
     const trancas = await Tranca.findAll({
       where: { idTotem },
-      attributes: ['id', 'status', 'modelo'], 
+      attributes: ["id", "bicicleta", "numero", "localizacao","anoDeFabricacao", "modelo","status"], 
     });
 
     if (!trancas.length) {
@@ -173,29 +182,19 @@ static async listarBicicletasDoTotem(req, res) {
     }
 
     // Buscar as trancas associadas ao Totem
-    const trancas = await Tranca.findAll({
-      where: { idTotem },
-      attributes: ['id'], 
-    });
+    const trancas = await Tranca.findAll({ where: { idTotem } });
 
-    if (!trancas.length) {
+    if (!trancas) {
       return ErroNaoEncontrado.toResponse(res, '404', 'Nenhuma tranca associada a este totem.');
     }
 
     // Buscar as bicicletas associadas às trancas
     const bicicletas = await Bicicleta.findAll({
-      include: [
-        {
-          model: Tranca,
-          as: 'tranca',
-          where: {
-            id: {
-              [Op.in]: trancas.map((tranca) => tranca.id),
-            },
-          },
-          attributes: [], 
+      where: {
+        id: {
+          [Op.in]: trancas.map((tranca) => tranca.bicicleta),
         },
-      ],
+      },
       attributes: ['id', 'marca', 'modelo', 'ano', 'numero', 'status'], 
     });
 
