@@ -22,6 +22,6 @@ router.delete('/:idTotem', (req, res) => TotemController.deletarTotem(req, res))
 router.get('/:idTotem/trancas', (req, res) => TotemController.listarTrancasDoTotem(req, res));
 
 // listar todas as bicicletas associadas a um totem
-router.get('/:idTotem/bicicletas', (req, res) => TotemController.listarBicicletasDoTotem(req, res));
+router.get('/:idTotem/bicicletas', (req, res) => TotemController.testListarBicicletasDoTotem(req, res));
 
 export default router;
