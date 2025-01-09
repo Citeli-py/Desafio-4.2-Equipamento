@@ -7,6 +7,7 @@ import { AluguelApi } from "../api/aluguel.js"
 import { InclusaoTrancaRepo } from '../repository/InclusaoTrancaRepo.js';
 import { Totem } from '../models/Totem.js';
 import Database from '../db/Database.js';
+import { RetiradaTrancaRepo } from '../repository/RetiradaTrancaRepo.js';
 
 export class TrancaService {
 
@@ -254,7 +255,7 @@ export class TrancaService {
         if(!tranca)
             return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
 
-        if(["NOVA", "EM_REPARO"].includes(tranca.status))
+        if(!["NOVA", "EM_REPARO"].includes(tranca.status))
             return {sucesso: false, erro: DadoInvalido, mensagem: "Tranca não está apta a ser integrada"};
 
         const totem = await TotemRepo.getTotem(idTotem);
@@ -272,6 +273,67 @@ export class TrancaService {
             const resposta = await TrancaRepo.editarTranca(tranca, {status: "LIVRE", idTotem: idTotem}, transacao);
 
             if(resposta.sucesso)
+                await transacao.commit();
+            else
+                await transacao.rollback();
+    
+        } catch(error){
+    
+            await transacao.rollback();
+            throw error;
+        }
+
+        return {sucesso: true}
+    }
+
+
+    /**
+     * Retira uma tranca da rede
+     * @param {number} idTotem - ID do totem
+     * @param {number} idTranca - Id da tranca
+     * @param {number} idFuncionario - id do funcionario
+     * @param {string} statusAcaoReparador - Ação do reparador
+     * @returns {{sucesso: boolean, erro?: number, mensagem?: string}}
+     */
+    static async retirarDaRede(idTotem, idTranca, idFuncionario, statusAcaoReparador){
+        // tranca deve estar sem nenhuma bicicleta presa nela.
+        // Devem ser registrados: a data/hora da retirada da tranca, o número da tranca e a matrícula do reparador.
+
+        if(!["REPARO", "APOSENTADORIA"].includes(statusAcaoReparador))
+            return { sucesso: false, erro: DadoInvalido, mensagem: 'Ação do reparador inválida' };
+
+        const tranca = await TrancaRepo.getTranca(idTranca);
+        if(!tranca)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não encontrada"};
+
+        if(tranca.bicicleta)
+            return {sucesso: false, erro: DadoInvalido, mensagem: "Existe uma bicicleta presa na tranca"};
+
+        const totem = await TotemRepo.getTotem(idTotem);
+        if(!totem)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Totem não encontrado"};
+
+        if(totem.id !== tranca.idTotem)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Tranca não está presa ao Totem informado"};
+
+        const funcionario = await AluguelApi.getFuncionario(idFuncionario);
+        if(!funcionario)
+            return {sucesso: false, erro: DadoNaoEncontrado, mensagem: "Funcionário não encontrada"};
+
+        const transacao = await Database.createTransaction();
+        
+        try{
+            await RetiradaTrancaRepo.criarRetirada(funcionario, tranca, transacao);
+            await TrancaRepo.destrancar(tranca, null, transacao);
+
+            let resposta = null
+            if(statusAcaoReparador === "REPARO")
+                resposta = await TrancaRepo.editarTranca(tranca, {status: "EM_REPARO", idTotem: null}, transacao);
+
+            if(statusAcaoReparador === "APOSENTADORIA")
+                resposta = await TrancaRepo.editarTranca(tranca, {status: "APOSENTADA", idTotem: null}, transacao);
+
+            if(resposta && resposta.sucesso)
                 await transacao.commit();
             else
                 await transacao.rollback();
