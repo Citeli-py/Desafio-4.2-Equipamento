@@ -7,9 +7,9 @@ steps:
     versionSpec: 20.10
 
 - task: Npm@1
-  displayName: 'npm ci'
+  displayName: 'npm install'
   inputs:
-    command: ci
+    command: install
     verbose: false
 
 - task: Npm@1
