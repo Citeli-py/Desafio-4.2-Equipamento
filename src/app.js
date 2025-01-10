@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import {DateTime} from 'luxon';
 
 const app = express();
-const PORT = 3000;
+const PORT = 3004;
 
 // Middleware para interpretar JSON
 app.use(bodyParser.json());
