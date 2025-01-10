@@ -1,0 +1,29 @@
+pool:
+  name: Azure Pipelines
+steps:
+- task: NodeTool@0
+  displayName: 'Use Node 20.10'
+  inputs:
+    versionSpec: 20.10
+
+- task: Npm@1
+  displayName: 'npm ci'
+  inputs:
+    command: ci
+    verbose: false
+
+- task: Npm@1
+  displayName: 'npm build'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run build'
+
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)/dist'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'

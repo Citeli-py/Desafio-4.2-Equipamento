@@ -1,0 +1,5 @@
+{
+    "name": "turma-node-grupo-4-equipamento",
+    "script": "./src/app.js",
+    "instances": "1"
+  }
