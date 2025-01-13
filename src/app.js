@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import {DateTime} from 'luxon';
 
 const app = express();
-const PORT = 4000;
+const PORT = 3004;
 
 // Middleware para interpretar JSON
 app.use(bodyParser.json());
@@ -27,20 +27,20 @@ app.use('/totem', totemRoutes);
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 
 
-// import Database from './db/Database.js';
+import Database from './db/Database.js';
 
-// Database.init();
-// const res = await Database.autenticacao()
-// if(res.sucess) {
+Database.init();
+const res = await Database.autenticacao()
+if(res.sucess) {
 
-//   // Sincronizar banco de dados e iniciar o servidor
-//   Database.conexao.sync({ force: false }) // Use { force: true } apenas para recriar tabelas ao desenvolver
-//     .then(() => {
-//       console.log('Database synced successfully.');
-//       app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-//     })
-//     .catch(error => console.error('Error syncing database:', error));
+  // Sincronizar banco de dados e iniciar o servidor
+  Database.conexao.sync({ force: false }) // Use { force: true } apenas para recriar tabelas ao desenvolver
+    .then(() => {
+      console.log('Database synced successfully.');
+      app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+    })
+    .catch(error => console.error('Error syncing database:', error));
 
-// }
-// else
-//   console.log(res.error);
+}
+else
+  console.log(res.error);
