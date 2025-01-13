@@ -24,9 +24,6 @@ app.use('/bicicleta', bicicletaRoutes);
 app.use('/tranca', trancaRoutes);
 app.use('/totem', totemRoutes);
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-
 import Database from './db/Database.js';
 
 Database.init();

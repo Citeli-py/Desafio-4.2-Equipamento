@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "prebuild": "rm -rf dist && mkdir dist",
-    "build": "cp -r src package.json package-lock.json deploy.bat deploy-ci.yaml pm2.json dist/",
+    "build": "cp -r src .env package.json package-lock.json deploy.bat deploy-ci.yaml pm2.json dist/",
     "start": "node ./src/app.js",
     "start:prod": "pm2 start pm2.json"
   },
