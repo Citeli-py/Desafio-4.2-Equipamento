@@ -20,9 +20,9 @@ import trancaRoutes from './routes/trancaRoutes.js';
 import totemRoutes from './routes/totemRoutes.js'
 
 // Rotas
-app.use('/bicicleta', bicicletaRoutes);
-app.use('/tranca', trancaRoutes);
-app.use('/totem', totemRoutes);
+app.use('/turma-node-grupo-4-equipamento/bicicleta', bicicletaRoutes);
+app.use('/turma-node-grupo-4-equipamento/tranca', trancaRoutes);
+app.use('/turma-node-grupo-4-equipamento/totem', totemRoutes);
 
 import Database from './db/Database.js';
 
