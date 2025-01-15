@@ -1,17 +1,26 @@
+import axios from 'axios';
 
-export class AluguelApi{
+export class AluguelApi {
+    static url = "http://20.226.53.175:8001/turma-node-grupo-4-aluguel/funcionario";
+    //static url = "http://localhost:3000/funcionario";
 
-    static async getFuncionario(id){
-        return {
-            id: id,
-            matricula: "12345",
-            senha: "sdfsdfasdfsadfs",
-            confirmacaoSenha: "sdfsdfasdfsadfs",
-            email: "user@example.com",
-            nome: "Funcionário",
-            idade: 32,
-            funcao: "Reparador",
-            cpf: "1111111111"
-          }
+    /**
+     * Busca informações de um funcionário por ID.
+     * @param {string} id - ID do funcionário a ser buscado.
+     * @returns {Promise<Object>} - Dados do funcionário ou erro.
+     */
+    static async getFuncionario(id) {
+        try {
+            const response = await axios.get(`${this.url}/${id}`);
+            return response.data; // Retorna os dados do funcionário.
+
+        } catch (error) {
+            // Não encontrou funcionário
+            if (error.response) 
+                return null
+
+            // Retorna um erro genérico em caso de falha na requisição.
+            throw new Error('Erro ao conectar com a API.');
+        }
     }
 }
