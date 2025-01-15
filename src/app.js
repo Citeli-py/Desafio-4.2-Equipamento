@@ -18,11 +18,13 @@ app.use(function (req, res, next) {
 import bicicletaRoutes from './routes/bicicletaRoutes.js';
 import trancaRoutes from './routes/trancaRoutes.js';
 import totemRoutes from './routes/totemRoutes.js'
+import restaurarBancoRoutes from './routes/restaurarBancoRoutes.js'
 
 // Rotas
 app.use('/turma-node-grupo-4-equipamento/bicicleta', bicicletaRoutes);
 app.use('/turma-node-grupo-4-equipamento/tranca', trancaRoutes);
 app.use('/turma-node-grupo-4-equipamento/totem', totemRoutes);
+app.use('/turma-node-grupo-4-equipamento/restaurarBanco', restaurarBancoRoutes);
 
 import Database from './db/Database.js';
 
