@@ -157,8 +157,11 @@ static async listarTrancasDoTotem(req, res) {
 
     // Buscar as trancas associadas ao totem
     const trancas = await Tranca.findAll({
-      where: { idTotem },
-      attributes: ["id", "bicicleta", "numero", "localizacao","anoDeFabricacao", "modelo","status"], 
+        attributes: ["id", "bicicleta", "numero", "localizacao", "anoDeFabricacao", "modelo", "status"],
+        where: {
+            idTotem,
+            status: { [Op.ne]: 'EXCLUIDA'},
+        },
     });
 
     if (!trancas.length) {
