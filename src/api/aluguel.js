@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 export class AluguelApi {
-    //static url = "http://20.226.53.175:8001/turma-node-grupo-4-aluguel/funcionario";
-    static url = "http://localhost:3000/funcionario";
+    static url = "http://20.226.53.175:8001/turma-node-grupo-4-aluguel/funcionario";
+    //static url = "http://localhost:3000/funcionario";
 
     /**
      * Busca informações de um funcionário por ID.
