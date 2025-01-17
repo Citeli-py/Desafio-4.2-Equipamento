@@ -1,19 +1,29 @@
+import axios from 'axios';
 
-export class ExternoApi{
+export class ExternoApi {
+    static url = "http://20.226.53.175:8001/turma-node-grupo-4-externo/enviarEmail";
 
     /**
-     * Chama o micro serviço externo e envia um email
-     * @param {string} email - endereço de email do destinatário
-     * @param {string} assunto - Assunto do email
-     * @param {string} mensagem - Corpo do email
-     * @returns {{id: number, email: string, assunto: string, mensagem: string}} - retorna um email
+     * 
+     * @param {string} email 
+     * @param {string} assunto 
+     * @param {string} mensagem 
+     * @returns {Promise<Object>} 
      */
-    static async enviarEmail(email, assunto, mensagem){
-        return {
-            id: 0,
-            email: email,
-            assunto: assunto,
-            mensagem: mensagem
-        }
+    static async enviarEmail(email, assunto, mensagem) {
+        try {
+            const response = await axios.post(this.url, {
+                email: email,
+                assunto: assunto,
+                mensagem: mensagem
+            }, {
+                timeout: 5000
+            });
+
+            // Dados válidos do email
+            return response.data;
+        } catch (error) {
+                throw new Error(`Erro inesperado: ${error.message}`);
+            }
     }
 }
